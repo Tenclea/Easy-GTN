@@ -1,0 +1,5 @@
+# Linter config
+.eslintrc.json
+
+# Node modules
+node_modules
