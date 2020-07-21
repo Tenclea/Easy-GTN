@@ -81,14 +81,15 @@ client.on('message', (message) => {
 				message.channel.send(client.toTry[letsTryThis])
 					.then(() => {
 						client.attempts.bot++;
-						/* const tried = client.toTry.splice(letsTryThis, 1);
-						console.log(`Tried number ${tried}`); */
+						const tried = client.toTry.splice(letsTryThis, 1);
+						console.log(`Tried number ${tried}`);
 					})
 					.catch(e => console.log(`Could not try number ${letsTryThis} : ${e}`));
 			}, Math.random() * 1000);
 			// added timeout to make the bot look more 'human'.
 		}, config.tryInterval);
 		message.channel.startTyping();
+		return console.log('Starting a new guessing session !');
 	}
 	if (command === 'stop') {
 		if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
