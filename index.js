@@ -59,7 +59,7 @@ client.on('message', (message) => {
 		let range = config.defaultRange;
 		if (args[0]) {
 			const newRange = parseInt(args[0]);
-			if (!isNaN(newRange) && newRange >= 2 && newRange < 1000000) range = newRange;
+			if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 			else console.log('The input range seems to be incorrect. Switching to default one.');
 		}
 		if (!Number.isInteger(range) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
