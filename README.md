@@ -40,6 +40,8 @@ Type `.start` `maxNumber`, and watch the "magic".
 - [ ] Standby mode > Will start guessing numbers once the game begins (command can be invoked before game starts)
 - [ ] `hint` command (might take some time) > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `higherThan`, `lowerThan`, `notStartingWith`)
 - [ ] Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
+- [ ] Add a 'time spent guessing' to the `stats` command
+- [ ] `save` command > writes list to file in order to `resume` later
 
 ## Disclaimer
 Everything you can see here has been made for educational purposes and as a proof of concept.
