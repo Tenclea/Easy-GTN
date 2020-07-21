@@ -1,6 +1,6 @@
 # EZ Guess The Number
 
-A quick tool I made that tries to guess a number without ever sending a number that was already sent.
+A quick Discord selfbot I made that tries to guess a number without ever sending a number that was already sent.
 
 ## Requirements
 
