@@ -19,7 +19,7 @@ client.on('message', (message) => {
 		// Removes the number from toTry list
 		client.attempts.users++;
 		client.toTry.splice(client.toTry.indexOf(number), 1);
-		console.log(`Somebody else tried ${message.content}`);
+		console.log(`Somebody else tried ${number}`);
 	}
 
 	// Check if the game's bot sends any messages (most likely Game Over)
@@ -101,14 +101,36 @@ client.on('message', (message) => {
 	}
 	if (command === 'stats') {
 		return console.log(`
-======================
+=====================
 Numbers tried : 
   - Bot   : ${client.attempts ? client.attempts.bot : 0}
   - Users : ${client.attempts ? client.attempts.users : 0}
   - Total : ${client.attempts ? client.attempts.bot + client.attempts.users : 0}
-Numbers left  : ${client.toTry ? client.toTry.length : '∞'}
-======================
+Numbers left : ${client.toTry ? client.toTry.length : '∞'}
+=====================
 `);
+	}
+	if (command === 'save') {
+		const { writeFileSync } = require('fs');
+		writeFileSync('./toTry.json', JSON.stringify(client.toTry));
+		return console.log(`Written ${client.toTry.length} left attempts to "toTry.json"`);
+	}
+	if (command === 'resume') {
+		if (!client.toTry) return console.log('You need to start a session before using this command.');
+
+		try {
+			const toResume = require('./toTry.json');
+
+			// Removes every values that were used in the saved session.
+			for (const value of client.toTry) {
+				if (!toResume.includes(value)) {
+					client.toTry.splice(client.toTry.indexOf(value), 1);
+				}
+			}
+			return console.log('Successfully removed all previously tried values !');
+		}
+		catch (e) { return console.log('Could not find anything to resume.'); }
+
 	}
 });
 
