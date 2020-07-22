@@ -12,7 +12,7 @@ client.once('ready', () => { console.log(`\nLogged in as ${client.user.tag} on $
 client.on('message', (message) => {
 
 	// Removes guesses from other users
-	if (client.toTry && !isNaN(parseInt(message.content)) && message.author.id !== client.user.id) {
+	if (client.toTry && message.channel.id === client.toTryChannel && !isNaN(parseInt(message.content)) && message.author.id !== client.user.id) {
 		const number = parseInt(message.content);
 		if (!client.toTry.includes(number)) return;
 
@@ -23,7 +23,7 @@ client.on('message', (message) => {
 	}
 
 	// Check if the game's bot sends any messages (most likely Game Over)
-	if (message.author.id === config.botID && client.toTry) {
+	if (message.author.id === config.botID && client.toTry && message.channel.id === client.toTryChannel) {
 		// Check if game ended
 		if (message.embeds[0] && message.embeds[0].description.startsWith(':tada:')) {
 			message.channel.stopTyping(true);
@@ -51,8 +51,8 @@ client.on('message', (message) => {
 	if (command === 'start') {
 		if (client.toTry) return console.log('It seems that the bot is already trying to guess the number somewhere.');
 
-		// Stats
 		client.attempts = { bot: 0, users: 0 };
+		client.toTryChannel = message.channel.id;
 
 		// Sets the game's range
 		let range = config.defaultRange;
@@ -109,12 +109,12 @@ Numbers left : ${client.toTry ? client.toTry.length : '∞'}
 =====================
 `);
 	}
-	if (command === 'save') {
+	if (command === 'save' || command === 'backup') {
 		const { writeFileSync } = require('fs');
 		writeFileSync('./toTry.json', JSON.stringify(client.toTry));
 		return console.log(`Written ${client.toTry.length} left attempts to "toTry.json"`);
 	}
-	if (command === 'resume') {
+	if (command === 'resume' || command === 'restore') {
 		if (!client.toTry) return console.log('You need to start a session before using this command.');
 
 		try {
@@ -122,14 +122,56 @@ Numbers left : ${client.toTry ? client.toTry.length : '∞'}
 
 			// Removes every values that were used in the saved session.
 			for (const value of client.toTry) {
-				if (!toResume.includes(value)) {
-					client.toTry.splice(client.toTry.indexOf(value), 1);
-				}
+				if (!toResume.includes(value)) { client.toTry.splice(client.toTry.indexOf(value), 1); }
 			}
 			return console.log('Successfully removed all previously tried values !');
 		}
 		catch (e) { return console.log('Could not find anything to resume.'); }
+	}
+	if (command === 'hint') {
+		if (args[0] === 'help' || args[0] === '-h' || args[0] === '--help') {
+			return console.log(`
+Hint command help :			
+-------------------
+Usage   : ${config.prefix}hint [type] [number]
+Example : ${config.prefix}hint biggerThan 1000
 
+All available types :
+biggerThan (bt) > Removes all numbers inferior to the chosen number.
+smallerThan (st) > Removes all numbers superior to the chosen number.
+isOdd (io) > Removes all even numbers.
+isEven (ie) > Removes all odd numbers.
+
+Even more coming soon...
+`);
+		}
+		if (!client.toTry) return console.log('You need to start a session before using this command.');
+
+		if (!args[0]) return console.log(`You need to choose a type of hint ! (see ${config.prefix}hint help)`);
+		const type = args[0].toLowerCase();
+		const number = parseInt(args[1]);
+
+		if (type === 'biggerthan' || type === 'bt') {
+			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			client.toTry = client.toTry.filter(value => value >= number);
+			return console.log(`Removed all numbers smaller than ${number}.`);
+		}
+		else if (type === 'smallerthan' || type === 'st') {
+			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			client.toTry = client.toTry.filter(value => value <= number);
+			return console.log(`Removed all numbers bigger than ${number}.`);
+		}
+		else if (type === 'isodd' || type === 'io') {
+			client.toTry = client.toTry.filter(value => value % 2 !== 0);
+			return console.log('Removed all even numbers.');
+		}
+		else if (type === 'iseven' || type === 'ie') {
+			client.toTry = client.toTry.filter(value => value % 2 === 0);
+			return console.log('Removed all odd numbers.');
+		}
+		else if (type === 'atpos' || type === 'inpos' || type === 'ap' || type === 'ip') {
+			return console.log('SOON...');
+		}
 	}
 });
 

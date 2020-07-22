@@ -1,6 +1,6 @@
 # EZ Guess The Number
 
-A quick Discord selfbot I made that tries to guess a number without ever sending a number that was already sent.
+A quick Discord selfbot I made that automatically plays Guess The Number (GTN) games.
 
 ## Requirements
 
@@ -38,17 +38,21 @@ Those are the "global variables" that are very useful to the bot.
 
 ## TODO
 
-- [ ] Make sure that the channel the number is sent in is the GTN channel.
+- [x] Make sure that the channel the number is sent in is the GTN channel.
+- [x] `save` command > writes list to file in order to `resume` later
+
+- [ ] Auto save feature
 - [ ] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 - [ ] Check if message gets removed by bot (wrong range ?)
 - [ ] `pause` command ?
 - [ ] `try` command ? (because user's messages are ignored)
 - [ ] `watch` command > does the same as `start` but only suggests in console what to try
 - [ ] Standby mode > Will start guessing numbers once the game begins (command can be invoked before game starts)
-- [ ] `hint` command > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `higherThan`, `lowerThan`, `notStartingWith`, `hasMultiple`)
+- [ ] `hint` command > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `higherThan`, `lowerThan`, `notStartingWith`, `hasMultiple`, `isOdd`, `isEven`)
 - [ ] Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
 - [ ] Add a 'time spent guessing' to the `stats` command
-- [ ] `save` command > writes list to file in order to `resume` later
+
+- [ ] improve guess interval using a recurring changing time  timeout function
 
 ## Disclaimer
 Everything you can see here has been made for educational purposes and as a proof of concept.
