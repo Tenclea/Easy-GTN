@@ -24,7 +24,13 @@ Go to the channel where there is a game of Guess The Number running.
 Type `.start` `maxNumber`, and watch the "magic".  
 
 ### Config file
-> Coming soon...
+Those are the "global variables" that are very useful to the bot.
+
+- `botID` > The UserID of the Guess The Number bot.
+- `prefix` > The key used before every command.
+- `defaultRange` > The default maximum number in the GTN game. (Will be used if no args are provided to the `start` command)
+- `token` > The user's token to connect to.
+- `tryInterval` > The time to wait between each guess attempt.
 
 ## Known issues
 > I did not spend plenty of time on testing this bot, so please create an issue if anything ever goes wrong on your side.
@@ -32,13 +38,14 @@ Type `.start` `maxNumber`, and watch the "magic".
 
 ## TODO
 
+- [ ] Make sure that the channel the number is sent in is the GTN channel.
 - [ ] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 - [ ] Check if message gets removed by bot (wrong range ?)
 - [ ] `pause` command ?
 - [ ] `try` command ? (because user's messages are ignored)
 - [ ] `watch` command > does the same as `start` but only suggests in console what to try
 - [ ] Standby mode > Will start guessing numbers once the game begins (command can be invoked before game starts)
-- [ ] `hint` command (might take some time) > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `higherThan`, `lowerThan`, `notStartingWith`)
+- [ ] `hint` command > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `higherThan`, `lowerThan`, `notStartingWith`, `hasMultiple`)
 - [ ] Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
 - [ ] Add a 'time spent guessing' to the `stats` command
 - [ ] `save` command > writes list to file in order to `resume` later
