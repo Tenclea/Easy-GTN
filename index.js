@@ -45,8 +45,7 @@ client.on('message', (message) => {
 	const args = message.content.slice(prefix.length).trim().split(/ +/g);
 	const command = args.shift().toLowerCase();
 
-	// Adding timeout to prevent message not being removed for everyone.
-	if (message.author.id === client.user.id) message.delete(100).catch(() => { });
+	if (message.author.id === client.user.id) message.delete().catch(() => { });
 
 	if (!command) return;
 	if (command === 'start') {
