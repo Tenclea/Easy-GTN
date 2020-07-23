@@ -19,9 +19,9 @@ A quick Discord selfbot I made that automatically plays Guess The Number (GTN) g
 ## How to use the bot
 
 ### How do I guess a number ?
-Open up Discord with the same account as the one you'll be using as a bot.  
-Go to the channel where there is a game of Guess The Number running.  
-Type `.start` `maxNumber`, and watch the "magic".  
+1. Open up Discord with the same account as the one you're using as a bot.  
+2. Go to the channel where there is a game of Guess The Number running.  
+3. Type `.start` `maxNumber`, and watch the "magic".  
 
 ### Config file
 Those are the "global variables" that are very useful to the bot.
@@ -40,19 +40,19 @@ Those are the "global variables" that are very useful to the bot.
 
 - [x] Make sure that the channel the number is sent in is the GTN channel.
 - [x] `save` command > writes list to file in order to `resume` later
+- [x] Add a 'time spent guessing' to the `stats` command
 
-- [ ] Auto save feature
+- [ ] `hint` command > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `notStartingWith`, `hasMultiple`)
+- [ ] Auto save feature (in config)
 - [ ] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 - [ ] Check if message gets removed by bot (wrong range ?)
 - [ ] `pause` command ?
 - [ ] `try` command ? (because user's messages are ignored)
 - [ ] `watch` command > does the same as `start` but only suggests in console what to try
 - [ ] Standby mode > Will start guessing numbers once the game begins (command can be invoked before game starts)
-- [ ] `hint` command > example : `.hint startingWith 7` removes all numbers that doesn't start with 7 (also > `higherThan`, `lowerThan`, `notStartingWith`, `hasMultiple`, `isOdd`, `isEven`)
 - [ ] Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
-- [ ] Add a 'time spent guessing' to the `stats` command
 
-- [ ] improve guess interval using a recurring changing time  timeout function
+- [ ] improve guess interval using a recurring changing time timeout function
 
 ## Disclaimer
 Everything you can see here has been made for educational purposes and as a proof of concept.
