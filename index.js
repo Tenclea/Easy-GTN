@@ -87,6 +87,7 @@ client.on('message', (message) => {
 			}, Math.random() * 1000);
 			// added timeout to make the bot look more 'human'.
 		}, config.tryInterval);
+		client.tryingSince = +new Date();
 		message.channel.startTyping();
 		return console.log('Starting a new guessing session !');
 	}
@@ -100,13 +101,15 @@ client.on('message', (message) => {
 	}
 	if (command === 'stats') {
 		return console.log(`
-=====================
+==============================
+Guessing for : ${client.tryingSince ? ((+new Date() - client.tryingSince) / 1000 / 60).toFixed(2) + ' minutes' : '0m'}
 Numbers tried : 
   - Bot   : ${client.attempts ? client.attempts.bot : 0}
   - Users : ${client.attempts ? client.attempts.users : 0}
   - Total : ${client.attempts ? client.attempts.bot + client.attempts.users : 0}
 Numbers left : ${client.toTry ? client.toTry.length : '∞'}
-=====================
+Probability next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFixed(5) + '%' : '∞'}
+==============================
 `);
 	}
 	if (command === 'save' || command === 'backup') {
@@ -142,7 +145,9 @@ smallerThan (st) > Removes all numbers superior to the chosen number.
 isOdd (io) > Removes all even numbers.
 isEven (ie) > Removes all odd numbers.
 
-Even more coming soon...
+atPos (ap) / inPos (ip) > Keeps all numbers with a specific number at the chosen position.
+			Usage : ${config.prefix}hint ap [position] [number]
+=====================================================================
 `);
 		}
 		if (!client.toTry) return console.log('You need to start a session before using this command.');
@@ -170,7 +175,12 @@ Even more coming soon...
 			return console.log('Removed all odd numbers.');
 		}
 		else if (type === 'atpos' || type === 'inpos' || type === 'ap' || type === 'ip') {
-			return console.log('SOON...');
+			const position = number; const numb = parseInt(args[2]);
+			if (isNaN(position)) return console.log(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
+			if (isNaN(numb)) return console.log(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
+
+			client.toTry = client.toTry.filter(value => String(value)[position - 1] == numb);
+			return console.log(`Removed all numbers without ${numb} on pos ${position}.`);
 		}
 	}
 });
