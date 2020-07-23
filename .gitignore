@@ -4,5 +4,5 @@
 # Node modules
 node_modules
 
-# Saved attempts file
-toTry.json
+# Saved attempts files
+toTry.json*
