@@ -100,16 +100,18 @@ client.on('message', (message) => {
 		return console.log('Successfully stopped the guessing bot.');
 	}
 	if (command === 'stats') {
+		const guessingFor = client.tryingSince ? (+new Date() - client.tryingSince) : 0;
+		const totalAtt = client.attempts ? client.attempts.bot + client.attempts.users : 0;
 		return console.log(`
-==============================
-Guessing for : ${client.tryingSince ? ((+new Date() - client.tryingSince) / 1000 / 60).toFixed(2) + ' minutes' : '0m'}
+==================================
+Guessing for : ${(guessingFor / 1000 / 60).toFixed(2)} minutes
 Numbers tried : 
   - Bot   : ${client.attempts ? client.attempts.bot : 0}
   - Users : ${client.attempts ? client.attempts.users : 0}
-  - Total : ${client.attempts ? client.attempts.bot + client.attempts.users : 0}
+  - Total : ${totalAtt} | ~${(totalAtt / (guessingFor / 1000)).toFixed(2)}/s
 Numbers left : ${client.toTry ? client.toTry.length : '∞'}
-Probability next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFixed(5) + '%' : '∞'}
-==============================
+Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFixed(5) + '%' : '∞'}
+==================================
 `);
 	}
 	if (command === 'save' || command === 'backup') {
@@ -140,13 +142,13 @@ Usage   : ${config.prefix}hint [type] [number]
 Example : ${config.prefix}hint biggerThan 1000
 
 All available types :
-biggerThan (bt) > Removes all numbers inferior to the chosen number.
-smallerThan (st) > Removes all numbers superior to the chosen number.
-isOdd (io) > Removes all even numbers.
-isEven (ie) > Removes all odd numbers.
+smallerThan (st) > Only keeps all numbers inferior to the chosen number.
+biggerThan (bt) > Only keeps all numbers superior to the chosen number.
+isEven (ie) > Keeps all even numbers.
+isOdd (io) > Keeps all odd numbers.
 
-atPos (ap) / inPos (ip) > Keeps all numbers with a specific number at the chosen position.
-			Usage : ${config.prefix}hint ap [position] [number]
+atPos (ap) / inPos (ip) > Only keeps all numbers with a specific number at the chosen position.
+			> Usage : ${config.prefix}hint ap [position] [number]
 =====================================================================
 `);
 		}
