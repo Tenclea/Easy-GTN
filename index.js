@@ -34,18 +34,18 @@ client.on('message', (message) => {
 				return console.log('Congratulations, you won the game !');
 			}
 			else {
-				return console.log(`${message.embeds[0].author.name} won the game.. You'll have better luck next time !`);
+				return console.log(`${message.embeds[0].author.name} won the game.. You'll have better luck next time :(`);
 			}
 		}
 	}
 
 	// If not a command from the bot's user, ignores the message
 	if ((!message.content.startsWith(prefix) || message.author.id !== client.user.id)) return;
+	if (message.author.id === client.user.id) message.delete().catch(() => { });
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/g);
 	const command = args.shift().toLowerCase();
 
-	if (message.author.id === client.user.id) message.delete().catch(() => { });
 
 	if (!command) return;
 	if (command === 'start') {
@@ -104,6 +104,8 @@ client.on('message', (message) => {
 		const totalAtt = client.attempts ? client.attempts.bot + client.attempts.users : 0;
 		return console.log(`
 ==================================
+Statistics for nerds :
+----------------------
 Guessing for : ${(guessingFor / 1000 / 60).toFixed(2)} minutes
 Numbers tried : 
   - Bot   : ${client.attempts ? client.attempts.bot : 0}
@@ -115,6 +117,8 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 `);
 	}
 	if (command === 'save' || command === 'backup') {
+		if (!client.toTry) return console.log('You need to start a session before using this command.');
+
 		const { writeFileSync } = require('fs');
 		writeFileSync('./toTry.json', JSON.stringify(client.toTry));
 		return console.log(`Written ${client.toTry.length} left attempts to "toTry.json"`);
@@ -136,6 +140,7 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 	if (command === 'hint') {
 		if (args[0] === 'help' || args[0] === '-h' || args[0] === '--help') {
 			return console.log(`
+=====================================================================
 Hint command help :			
 -------------------
 Usage   : ${config.prefix}hint [type] [number]
@@ -182,7 +187,7 @@ atPos (ap) / inPos (ip) > Only keeps all numbers with a specific number at the c
 			if (isNaN(numb)) return console.log(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
 
 			client.toTry = client.toTry.filter(value => String(value)[position - 1] == numb);
-			return console.log(`Removed all numbers without ${numb} on pos ${position}.`);
+			return console.log(`Removed all numbers without a "${numb}" on pos ${position}.`);
 		}
 	}
 });
