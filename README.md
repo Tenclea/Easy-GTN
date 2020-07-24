@@ -48,11 +48,11 @@ Those are the "global variables" that are very useful to the bot.
 * [x] Add a 'time spent guessing' to the `stats` command
 * [x] Auto save feature (configurable)
 * [x] `hint` command (let me know if you have any other suggestions)
+* [x] `pause` command
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] Remove need to `start` before `resume`
 * [ ] Save before stop in config
-* [ ] ? `pause` command
 
 * [ ] `watch` command > does the same as `start` but only suggests in console what to try
 * [ ] Standby mode > Will wait for the game to begin (command can be invoked before game starts)

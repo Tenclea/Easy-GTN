@@ -96,6 +96,15 @@ client.on('message', (message) => {
 		stopGuessing();
 		return console.log('Successfully stopped the guessing bot.');
 	}
+	if (command === 'pause') {
+		if (!client.toTry) return console.log('You need to start a session before using this command.');
+
+		if (client.toTryLoop) {
+			clearTimeout(client.toTryLoop); delete client.toTryLoop;
+			return console.log('Successfully paused the guesses. Use the pause command a second time to resume.');
+		}
+		else { startGuessing(); return console.log('Successfully resumed the guesses. Use the pause command another second time to pause.'); }
+	}
 	if (command === 'stats') {
 		const guessingFor = client.tryingSince ? (+new Date() - client.tryingSince) : 0;
 		const totalAtt = client.attempts ? client.attempts.bot + client.attempts.users : 0;
