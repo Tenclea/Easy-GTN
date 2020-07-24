@@ -39,7 +39,7 @@ Those are the "global variables" that are very useful to the bot.
 
 > I did not spend plenty of time on testing this bot, so please create an issue if anything ever goes wrong on your side.
 
-* Typing a number with the same account as the bot is using won't remove the number from the "toTry" list.
+* Nothing at the moment ! :3
 
 ## TODO
 
@@ -52,15 +52,13 @@ Those are the "global variables" that are very useful to the bot.
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] Remove need to `start` before `resume`
 * [ ] Save before stop in config
-* [ ] `pause` command ?
+* [ ] ? `pause` command
 
 * [ ] `watch` command > does the same as `start` but only suggests in console what to try
 * [ ] Standby mode > Will wait for the game to begin (command can be invoked before game starts)
-* [ ] `try` command ? (because bot's user's guesses are ignored)
 * [ ] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 
-* [ ] improve guess interval using a recurring changing time timeout function
-* [ ] Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
+* [ ] ? Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
 
 ## Disclaimer
 

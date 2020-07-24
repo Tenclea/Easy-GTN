@@ -7,7 +7,7 @@ const config = require('./config.json');
 const prefix = config.prefix;
 
 // Useful functions
-const { writeFileSync } = require('fs');
+const { readFileSync, writeFileSync } = require('fs');
 
 // Events
 client.once('ready', () => { console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
@@ -47,7 +47,7 @@ client.on('message', (message) => {
 
 	// If not a command from the bot's user, ignores the message
 	if ((!message.content.startsWith(prefix) || message.author.id !== client.user.id)) return;
-	if (message.author.id === client.user.id) message.delete().catch(() => { });
+	if (message.author.id === client.user.id) message.delete(100).catch(() => { });
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/g);
 	const command = args.shift().toLowerCase();
@@ -123,15 +123,15 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 		if (!client.toTry) return console.log('You need to start a session before using this command.');
 
 		try {
-			const toResume = require('./toTry.json');
+			const toResume = JSON.parse(readFileSync('./toTry.json'));
+			const oldLength = client.toTry.length;
 
 			// Removes every values that were used in the saved session.
-			for (const value of client.toTry) {
-				if (!toResume.includes(value)) { client.toTry.splice(client.toTry.indexOf(value), 1); }
-			}
-			return console.log('Successfully removed all previously tried values !');
+			client.toTry = client.toTry.filter(value => toResume.includes(value));
+			return console.log(`Successfully removed ${oldLength - client.toTry.length} previously tried values !`);
 		}
 		catch (e) { return console.log('Could not find anything to resume.'); }
+
 	}
 	if (command === 'hint') {
 		if (args[0] === 'help' || args[0] === '-h' || args[0] === '--help') {
