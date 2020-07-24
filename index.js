@@ -6,6 +6,9 @@ const client = new Client();
 const config = require('./config.json');
 const prefix = config.prefix;
 
+// Useful functions
+const { writeFileSync } = require('fs');
+
 // Events
 client.once('ready', () => { console.log(`\nLogged in as ${client.user.tag} on ${new Date().toUTCString()}!`); });
 
@@ -26,16 +29,10 @@ client.on('message', (message) => {
 	if (message.author.id === config.botID && client.toTry && message.channel.id === client.toTryChannel) {
 		// Check if game ended
 		if (message.embeds[0] && message.embeds[0].description.startsWith(':tada:')) {
-			message.channel.stopTyping(true);
-			delete client.toTry;
-			clearInterval(client.toTryInterval);
+			stopGuessing();
 
-			if (message.embeds[0].author.name === client.user.tag) {
-				return console.log('Congratulations, you won the game !');
-			}
-			else {
-				return console.log(`${message.embeds[0].author.name} won the game.. You'll have better luck next time :(`);
-			}
+			if (message.embeds[0].author.name === client.user.tag) { return console.log('Congratulations, you won the game !'); }
+			else { return console.log(`${message.embeds[0].author.name} won the game.. You'll have better luck next time :(`); }
 		}
 	}
 
@@ -45,7 +42,6 @@ client.on('message', (message) => {
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/g);
 	const command = args.shift().toLowerCase();
-
 
 	if (!command) return;
 	if (command === 'start') {
@@ -69,9 +65,7 @@ client.on('message', (message) => {
 		// Message sending interval
 		client.toTryInterval = setInterval(() => {
 			if (client.toTry.length === 0) {
-				message.channel.stopTyping(true);
-				delete client.toTry;
-				clearInterval(client.toTryInterval);
+				stopGuessing();
 				return console.log('All numbers have been tried ! It seems like the range set was lower than the game\'s one.');
 			}
 
@@ -87,16 +81,27 @@ client.on('message', (message) => {
 			}, Math.random() * 1000);
 			// added timeout to make the bot look more 'human'.
 		}, config.tryInterval);
+
+		// Auto-save interval
+		if (config.autoSave) {
+			client.autoSave = setInterval(() => {
+				try {
+					if (!client.toTry || client.toTry.length === 0) return;
+					console.log('Auto-saving...');
+
+					writeFileSync('./toTry.json', JSON.stringify(client.toTry));
+					return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json".`);
+				}
+				catch (e) { return console.log(`The auto-save failed : ${e}`); }
+			}, 60000);
+		}
+
 		client.tryingSince = +new Date();
 		message.channel.startTyping();
-		return console.log('Starting a new guessing session !');
+		return console.log(`\nStarting a new guessing session ! ${client.toTry.length} guesses to go !`);
 	}
 	if (command === 'stop') {
-		if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
-
-		message.channel.stopTyping(true);
-		delete client.toTry;
-		clearInterval(client.toTryInterval);
+		stopGuessing();
 		return console.log('Successfully stopped the guessing bot.');
 	}
 	if (command === 'stats') {
@@ -119,9 +124,8 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 	if (command === 'save' || command === 'backup') {
 		if (!client.toTry) return console.log('You need to start a session before using this command.');
 
-		const { writeFileSync } = require('fs');
 		writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-		return console.log(`Written ${client.toTry.length} left attempts to "toTry.json"`);
+		return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json"`);
 	}
 	if (command === 'resume' || command === 'restore') {
 		if (!client.toTry) return console.log('You need to start a session before using this command.');
@@ -152,8 +156,9 @@ biggerThan (bt) > Only keeps all numbers superior to the chosen number.
 isEven (ie) > Keeps all even numbers.
 isOdd (io) > Keeps all odd numbers.
 
-atPos (ap) / inPos (ip) > Only keeps all numbers with a specific number at the chosen position.
-			> Usage : ${config.prefix}hint ap [position] [number]
+atPos (ap) > Only keeps all numbers with a specific number at the chosen position.
+           > Usage : ${config.prefix}hint ap [position] [number]
+notAtPos (nap) > Only keeps all numbers without a specific number at the chosen position.
 =====================================================================
 `);
 		}
@@ -163,33 +168,56 @@ atPos (ap) / inPos (ip) > Only keeps all numbers with a specific number at the c
 		const type = args[0].toLowerCase();
 		const number = parseInt(args[1]);
 
+		const oldLength = client.toTry.length;
+
 		if (type === 'biggerthan' || type === 'bt') {
 			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
 			client.toTry = client.toTry.filter(value => value >= number);
-			return console.log(`Removed all numbers smaller than ${number}.`);
+			return console.log(`Removed ${oldLength - client.toTry.length} numbers smaller than ${number}.`);
 		}
 		else if (type === 'smallerthan' || type === 'st') {
 			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
 			client.toTry = client.toTry.filter(value => value <= number);
-			return console.log(`Removed all numbers bigger than ${number}.`);
+			return console.log(`Removed ${oldLength - client.toTry.length} numbers bigger than ${number}.`);
 		}
 		else if (type === 'isodd' || type === 'io') {
 			client.toTry = client.toTry.filter(value => value % 2 !== 0);
-			return console.log('Removed all even numbers.');
+			return console.log(`Removed ${oldLength - client.toTry.length} even numbers.`);
 		}
 		else if (type === 'iseven' || type === 'ie') {
 			client.toTry = client.toTry.filter(value => value % 2 === 0);
-			return console.log('Removed all odd numbers.');
+			return console.log(`Removed ${oldLength - client.toTry.length} odd numbers.`);
 		}
-		else if (type === 'atpos' || type === 'inpos' || type === 'ap' || type === 'ip') {
+		else if (type === 'atpos' || type === 'ap') {
 			const position = number; const numb = parseInt(args[2]);
 			if (isNaN(position)) return console.log(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
 			if (isNaN(numb)) return console.log(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
 
 			client.toTry = client.toTry.filter(value => String(value)[position - 1] == numb);
-			return console.log(`Removed all numbers without a "${numb}" on pos ${position}.`);
+			return console.log(`Removed ${oldLength - client.toTry.length} numbers without a "${numb}" on pos ${position}.`);
+		}
+		else if (type === 'notatpos' || type === 'nap') {
+			const position = number; const numb = parseInt(args[2]);
+			if (isNaN(position)) return console.log(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
+			if (isNaN(numb)) return console.log(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
+
+			client.toTry = client.toTry.filter(value => String(value)[position - 1] != numb);
+			return console.log(`Removed ${oldLength - client.toTry.length} numbers with a "${numb}" on pos ${position}.`);
 		}
 	}
 });
+
+const stopGuessing = () => {
+	if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
+
+	delete client.toTry;
+	if (client.autoSave) clearInterval(client.autoSave);
+	if (client.toTryInterval) clearInterval(client.toTryInterval);
+
+	const GTNChannel = client.channels.get(client.toTryChannel);
+	if (GTNChannel) GTNChannel.stopTyping(true);
+
+	return;
+};
 
 client.login(config.token);
