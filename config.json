@@ -1,7 +1,8 @@
 {
+	"autoSave": true,
 	"botID": "694278840855298079",
 	"prefix": ".",
-	"defaultRange": 100,
-	"token": "PutYourDiscordTokenHere !!!",
-	"tryInterval": 1500
+	"defaultRange": 100000,
+	"token": "Here_Goes_Your_Token",
+	"tryInterval": 3500
 }
