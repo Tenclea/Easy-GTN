@@ -30,10 +30,10 @@ Those are the "global variables" that are very useful to the bot.
 
 * `autoSave` > Whether to let the bot auto-save or not. (true/false)
 * `botID` > The UserID of the Guess The Number bot.
-* `prefix` > The key used before every command.
 * `defaultRange` > The default maximum number in the GTN game. (Will be used if no args are provided to the `start` command)
+* `guessInterval` > The time to wait between each guess attempt (in ms). 
+* `prefix` > The key used before every command.
 * `token` > The user's token to connect to.
-* `tryInterval` > The time to wait between each guess attempt. 
 
 ## Known issues
 
@@ -47,11 +47,9 @@ Those are the "global variables" that are very useful to the bot.
 * [x] `save` command > writes list to file in order to `resume` later
 * [x] Add a 'time spent guessing' to the `stats` command
 * [x] Auto save feature (configurable)
+* [x] `hint` command (let me know if you have any other suggestions)
 
 * [ ] Command Handler ? (Main file starts to look messy)
-
-* [ ] `hint` command (let me know if you have any other suggestions)
-* [ ] Check if guess gets removed by GTN bot (wrong range ?)
 * [ ] Remove need to `start` before `resume`
 * [ ] Save before stop in config
 * [ ] `pause` command ?

@@ -10,29 +10,38 @@ const prefix = config.prefix;
 const { writeFileSync } = require('fs');
 
 // Events
-client.once('ready', () => { console.log(`\nLogged in as ${client.user.tag} on ${new Date().toUTCString()}!`); });
+client.once('ready', () => { console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
 
 client.on('message', (message) => {
 
 	// Removes guesses from other users
-	if (client.toTry && message.channel.id === client.toTryChannel && !isNaN(parseInt(message.content)) && message.author.id !== client.user.id) {
+	if (client.toTry && message.channel.id === client.toTryChannel.id && !isNaN(parseInt(message.content))) {
 		const number = parseInt(message.content);
 		if (!client.toTry.includes(number)) return;
 
 		// Removes the number from toTry list
 		client.attempts.users++;
 		client.toTry.splice(client.toTry.indexOf(number), 1);
-		console.log(`Somebody else tried ${number}`);
+		if (message.author.id !== client.user.id) console.log(`Somebody else tried ${number}`);
+		else console.log(`You tried ${number}`);
 	}
 
-	// Check if the game's bot sends any messages (most likely Game Over)
-	if (message.author.id === config.botID && client.toTry && message.channel.id === client.toTryChannel) {
+	// Check if the game's bot sends any messages
+	if (message.author.id === config.botID) {
+		// Check if a game just started
+		if (message.embeds[0] && message.embeds[0].footer && message.embeds[0].footer.text && message.embeds[0].footer.text.includes('Started by:')) {
+			if (!message.embeds[0].description) return;
+
+			if (message.embeds[0].description.includes('game starting in')) return console.log(`A GTN game is about to start in ${message.guild.name} !`);
+			else if (message.embeds[0].description.includes(':tada: Guess that number!')) return console.log(`A GTN game just started in ${message.guild.name} !`);
+		}
 		// Check if game ended
-		if (message.embeds[0] && message.embeds[0].description.startsWith(':tada:')) {
+		else if (message.embeds[0] && message.embeds[0].description && message.embeds[0].description.startsWith(':tada:')) {
 			stopGuessing();
 
 			if (message.embeds[0].author.name === client.user.tag) { return console.log('Congratulations, you won the game !'); }
-			else { return console.log(`${message.embeds[0].author.name} won the game.. You'll have better luck next time :(`); }
+			else if (message.channel.id === client.toTryChannel.id) { return console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
+			else { return console.log(`${message.embeds[0].author.name} won a game of GTN in ${message.guild.name}.`); }
 		}
 	}
 
@@ -48,7 +57,7 @@ client.on('message', (message) => {
 		if (client.toTry) return console.log('It seems that the bot is already trying to guess the number somewhere.');
 
 		client.attempts = { bot: 0, users: 0 };
-		client.toTryChannel = message.channel.id;
+		client.toTryChannel = message.channel;
 
 		// Sets the game's range
 		let range = config.defaultRange;
@@ -62,25 +71,8 @@ client.on('message', (message) => {
 		// Array of all possible numbers in given range
 		client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
 
-		// Message sending interval
-		client.toTryInterval = setInterval(() => {
-			if (client.toTry.length === 0) {
-				stopGuessing();
-				return console.log('\nStopping the bot : All numbers have been tried !');
-			}
-
-			const letsTryThis = Math.floor(Math.random() * client.toTry.length);
-			setTimeout(() => {
-				message.channel.send(client.toTry[letsTryThis])
-					.then(() => {
-						client.attempts.bot++;
-						const tried = client.toTry.splice(letsTryThis, 1);
-						console.log(`Tried number ${tried}`);
-					})
-					.catch(e => console.log(`Could not try number ${letsTryThis} : ${e}`));
-			}, Math.random() * 1000);
-			// added timeout to make the bot look more 'human'.
-		}, config.tryInterval);
+		// Message sending loop
+		startGuessing(message);
 
 		// Auto-save interval
 		if (config.autoSave) {
@@ -225,14 +217,34 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 const stopGuessing = () => {
 	if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
 
-	delete client.toTry;
-	if (client.autoSave) clearInterval(client.autoSave);
-	if (client.toTryInterval) clearInterval(client.toTryInterval);
-
-	const GTNChannel = client.channels.get(client.toTryChannel);
+	const GTNChannel = client.channels.get(client.toTryChannel.id);
 	if (GTNChannel) GTNChannel.stopTyping(true);
 
+	delete client.toTry;
+	delete client.toTryChannel;
+	if (client.autoSave) clearInterval(client.autoSave);
+	if (client.toTryLoop) clearTimeout(client.toTryLoop);
+
 	return;
+};
+
+// Loop with variable timeout
+const startGuessing = async () => {
+	// Added random timeout to make the bot look more 'human'.
+	const timeout = config.guessInterval + Math.random() * 1000;
+
+	if (client.toTry.length === 0) { stopGuessing(); return console.log('\nStopping the bot : All numbers have been tried !'); }
+
+	const letsTryThis = client.toTry.splice(Math.floor(Math.random() * client.toTry.length), 1);
+	client.toTryChannel.send(letsTryThis)
+		.then(() => {
+			client.attempts.bot++;
+			console.log(`Tried number ${letsTryThis}`);
+		})
+		.catch(e => console.log(`Could not try number ${letsTryThis} : ${e}`));
+
+	// Here we go again
+	client.toTryLoop = setTimeout(startGuessing, timeout);
 };
 
 client.login(config.token);
