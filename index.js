@@ -66,7 +66,7 @@ client.on('message', (message) => {
 		client.toTryInterval = setInterval(() => {
 			if (client.toTry.length === 0) {
 				stopGuessing();
-				return console.log('All numbers have been tried ! It seems like the range set was lower than the game\'s one.');
+				return console.log('\nStopping the bot : All numbers have been tried !');
 			}
 
 			const letsTryThis = Math.floor(Math.random() * client.toTry.length);
@@ -98,7 +98,7 @@ client.on('message', (message) => {
 
 		client.tryingSince = +new Date();
 		message.channel.startTyping();
-		return console.log(`\nStarting a new guessing session ! ${client.toTry.length} guesses to go !`);
+		return console.log(`\nStarted a new guessing session ! \n${client.toTry.length} guesses to go !`);
 	}
 	if (command === 'stop') {
 		stopGuessing();
@@ -156,8 +156,11 @@ biggerThan (bt) > Only keeps all numbers superior to the chosen number.
 isEven (ie) > Keeps all even numbers.
 isOdd (io) > Keeps all odd numbers.
 
+hasMultiple (hm) > Keeps all numbers with multiple occurrences of the chosen number.
+notHasMultiple (nhm) > Removes all numbers with multiple occurrences of the chosen number.
+
 atPos (ap) > Only keeps all numbers with a specific number at the chosen position.
-           > Usage : ${config.prefix}hint ap [position] [number]
+           > Usage : ${config.prefix}hint atPos [position] [number]
 notAtPos (nap) > Only keeps all numbers without a specific number at the chosen position.
 =====================================================================
 `);
@@ -187,6 +190,18 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 		else if (type === 'iseven' || type === 'ie') {
 			client.toTry = client.toTry.filter(value => value % 2 === 0);
 			return console.log(`Removed ${oldLength - client.toTry.length} odd numbers.`);
+		}
+		else if (type === 'hasmultiple' || type === 'hm') {
+			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			client.toTry = client.toTry.filter(value => [...String(value).matchAll(new RegExp(number, 'gi'))].map(a => a[0]).length > 1);
+			return console.log(`Removed ${oldLength - client.toTry.length} numbers without multiple "${number}".`);
+		}
+		else if (type === 'nothasmultiple' || type === 'nhm') {
+			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+
+			client.toTry = client.toTry.filter(value => [...String(value).matchAll(new RegExp(number, 'gi'))].map(a => a[0]).length === 1);
+
+			return console.log(`Removed ${oldLength - client.toTry.length} numbers with multiple "${number}".`);
 		}
 		else if (type === 'atpos' || type === 'ap') {
 			const position = number; const numb = parseInt(args[2]);
