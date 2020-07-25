@@ -2,7 +2,7 @@
 	"autoSave": true,
 	"botID": "694278840855298079",
 	"defaultRange": 100000,
-	"guessInterval": 2500,
+	"guessInterval": 1500,
 	"prefix": ".",
 	"token": "Here_Goes_Your_Token"
 }

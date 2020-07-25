@@ -49,12 +49,13 @@ Those are the "global variables" that are very useful to the bot.
 * [x] Auto save feature (configurable)
 * [x] `hint` command (let me know if you have any other suggestions)
 * [x] `pause` command
+* [x] `watch` command > does the same as `start` without sending any messages
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] Remove need to `start` before `resume`
 * [ ] Save before stop in config
+* [ ] `help` command
 
-* [ ] `watch` command > does the same as `start` but only suggests in console what to try
 * [ ] Standby mode > Will wait for the game to begin (command can be invoked before game starts)
 * [ ] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 

@@ -15,15 +15,19 @@ client.once('ready', () => { console.log(`Logged in as ${client.user.tag} on ${n
 client.on('message', (message) => {
 
 	// Removes guesses from other users
-	if (client.toTry && message.channel.id === client.toTryChannel.id && !isNaN(parseInt(message.content))) {
+	if (client.toTry && message.channel.id === client.watchingChannel.id && !isNaN(parseInt(message.content))) {
 		const number = parseInt(message.content);
 		if (!client.toTry.includes(number)) return;
 
 		// Removes the number from toTry list
 		client.attempts.users++;
 		client.toTry.splice(client.toTry.indexOf(number), 1);
-		if (message.author.id !== client.user.id) console.log(`Somebody else tried ${number}`);
-		else console.log(`You tried ${number}`);
+
+		if (message.author.id === client.user.id) console.log(`You tried ${number}`);
+		else console.log(`Somebody else tried ${number}`);
+
+		if (client.toTry.length === 1 && client.isWatching) console.log(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${client.toTry[0]} !!`);
+		return;
 	}
 
 	// Check if the game's bot sends any messages
@@ -38,9 +42,10 @@ client.on('message', (message) => {
 		// Check if game ended
 		else if (message.embeds[0] && message.embeds[0].description && message.embeds[0].description.startsWith(':tada:')) {
 			stopGuessing();
+			stopWatching();
 
 			if (message.embeds[0].author.name === client.user.tag) { return console.log('Congratulations, you won the game !'); }
-			else if (message.channel.id === client.toTryChannel.id) { return console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
+			else if (message.channel.id === client.watchingChannel.id) { return console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
 			else { return console.log(`${message.embeds[0].author.name} won a game of GTN in ${message.guild.name}.`); }
 		}
 	}
@@ -54,45 +59,58 @@ client.on('message', (message) => {
 
 	if (!command) return;
 	if (command === 'start') {
-		if (client.toTry) return console.log('It seems that the bot is already trying to guess the number somewhere.');
+		if (client.toTryLoop) return console.log('It seems that the bot is already trying to guess the number somewhere.');
 
-		client.attempts = { bot: 0, users: 0 };
-		client.toTryChannel = message.channel;
+		if (!client.toTry || client.toTry.length === 0) {
+			// Sets the game's range
+			let range = config.defaultRange;
+			if (args[0]) {
+				const newRange = parseInt(args[0]);
+				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
+				else console.log('The input range seems to be incorrect. Switching to default one.');
+			}
+			if (!Number.isInteger(range) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
-		// Sets the game's range
-		let range = config.defaultRange;
-		if (args[0]) {
-			const newRange = parseInt(args[0]);
-			if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
-			else console.log('The input range seems to be incorrect. Switching to default one.');
+			// Array of all possible numbers in given range
+			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
 		}
-		if (!Number.isInteger(range) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
-		// Array of all possible numbers in given range
-		client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
+		console.log(`\nStarting a new guessing session ! \n${client.toTry.length} guesses to go !`);
 
-		// Message sending loop
+		startWatching(message);
 		startGuessing(message);
 
-		// Auto-save interval
-		if (config.autoSave) {
-			client.autoSave = setInterval(() => {
-				try {
-					if (!client.toTry || client.toTry.length === 0) return;
-					console.log('Auto-saving...');
-
-					writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-					return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json".`);
-				}
-				catch (e) { return console.log(`The auto-save failed : ${e}`); }
-			}, 60000);
-		}
-
-		client.tryingSince = +new Date();
 		message.channel.startTyping();
-		return console.log(`\nStarted a new guessing session ! \n${client.toTry.length} guesses to go !`);
+		return;
+	}
+	if (command === 'watch') {
+		if (client.isWatching && !client.toTryLoop) return console.log('It seems that the bot is already watching a channel.');
+
+		if (!client.toTry) {
+			// Sets the game's range
+			let range = config.defaultRange;
+			if (args[0]) {
+				const newRange = parseInt(args[0]);
+				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
+				else console.log('The input range seems to be incorrect. Switching to default one.');
+			}
+			if (!Number.isInteger(range) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
+
+			// Array of all possible numbers in given range
+			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
+		}
+		else {
+			const bckp = client.toTry;
+			stopGuessing();
+			client.toTry = bckp;
+			console.log('Switching from guessing to watching...');
+		}
+		startWatching(message);
+
+		return console.log(`Started a new watching session in ${client.watchingChannel.name} !\n${client.toTry.length} numbers left.`);
 	}
 	if (command === 'stop') {
+		stopWatching();
 		stopGuessing();
 		return console.log('Successfully stopped the guessing bot.');
 	}
@@ -106,19 +124,19 @@ client.on('message', (message) => {
 		else { startGuessing(); return console.log('Successfully resumed the guesses. Use the pause command another second time to pause.'); }
 	}
 	if (command === 'stats') {
-		const guessingFor = client.tryingSince ? (+new Date() - client.tryingSince) : 0;
+		const uptime = client.watchingSince ? (+new Date() - client.watchingSince) : 0;
 		const totalAtt = client.attempts ? client.attempts.bot + client.attempts.users : 0;
 		return console.log(`
 ==================================
 Statistics for nerds :
 ----------------------
-Guessing for : ${(guessingFor / 1000 / 60).toFixed(2)} minutes
+Guessing for : ${(uptime / 1000 / 60).toFixed(2)} minutes
 Numbers tried : 
   - Bot   : ${client.attempts ? client.attempts.bot : 0}
   - Users : ${client.attempts ? client.attempts.users : 0}
-  - Total : ${totalAtt} | ~${(totalAtt / (guessingFor / 1000)).toFixed(2)}/s
-Numbers left : ${client.toTry ? client.toTry.length : '∞'}
-Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFixed(5) + '%' : '∞'}
+  - Total : ${totalAtt} | ~${(totalAtt / (uptime / 1000)).toFixed(2)}/s
+Numbers left : ${client.toTry ? client.toTry.length : '0'}
+Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFixed(4) + '%' : '0%'}
 ==================================
 `);
 	}
@@ -223,29 +241,16 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 	}
 });
 
-const stopGuessing = () => {
-	if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
-
-	const GTNChannel = client.channels.get(client.toTryChannel.id);
-	if (GTNChannel) GTNChannel.stopTyping(true);
-
-	delete client.toTry;
-	delete client.toTryChannel;
-	if (client.autoSave) clearInterval(client.autoSave);
-	if (client.toTryLoop) clearTimeout(client.toTryLoop);
-
-	return;
-};
 
 // Loop with variable timeout
 const startGuessing = async () => {
 	// Added random timeout to make the bot look more 'human'.
-	const timeout = config.guessInterval + Math.random() * 1000;
+	const timeout = config.guessInterval + Math.random() * 1500;
 
 	if (client.toTry.length === 0) { stopGuessing(); return console.log('\nStopping the bot : All numbers have been tried !'); }
 
 	const letsTryThis = client.toTry.splice(Math.floor(Math.random() * client.toTry.length), 1);
-	client.toTryChannel.send(letsTryThis)
+	client.watchingChannel.send(letsTryThis)
 		.then(() => {
 			client.attempts.bot++;
 			console.log(`Tried number ${letsTryThis}`);
@@ -255,5 +260,49 @@ const startGuessing = async () => {
 	// Here we go again
 	client.toTryLoop = setTimeout(startGuessing, timeout);
 };
+
+const stopGuessing = () => {
+	if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
+
+	const GTNChannel = client.channels.get(client.watchingChannel.id);
+	if (GTNChannel) GTNChannel.stopTyping(true);
+
+	delete client.toTry;
+	delete client.watchingChannel;
+	if (client.autoSave) clearInterval(client.autoSave);
+	if (client.toTryLoop) clearTimeout(client.toTryLoop);
+
+	return;
+};
+
+const startWatching = (message) => {
+	// Auto-save interval
+	if (config.autoSave) {
+		client.autoSave = setInterval(() => {
+			try {
+				if (!client.toTry || client.toTry.length === 0) return;
+				console.log('Auto-saving...');
+
+				writeFileSync('./toTry.json', JSON.stringify(client.toTry));
+				return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json".`);
+			}
+			catch (e) { return console.log(`The auto-save failed : ${e}`); }
+		}, 60000);
+	}
+
+	if (!client.attempts) client.attempts = { bot: 0, users: 0 };
+	client.isWatching = true;
+	client.watchingChannel = message.channel;
+
+	client.watchingSince = +new Date();
+	return;
+};
+
+const stopWatching = () => {
+	if (client.isWatching) delete client.isWatching;
+	if (client.watchingChannel) delete client.watchingChannel;
+	return;
+};
+
 
 client.login(config.token);
