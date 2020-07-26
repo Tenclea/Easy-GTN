@@ -5,5 +5,5 @@
 	"guessInterval": 1500,
 	"prefix": ".",
 	"saveBeforeStop": true,
-	"tokenG": "Here_Goes_Your_Token"
+	"token": "Here_Goes_Your_Token"
 }
