@@ -7,7 +7,7 @@ const config = require('./config.json');
 const prefix = config.prefix;
 
 // Useful functions
-const { readFileSync, writeFileSync } = require('fs');
+const { existsSync, readFileSync, writeFileSync } = require('fs');
 
 // Events
 client.once('ready', () => { console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
@@ -145,12 +145,11 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 	}
 	if (command === 'save' || command === 'backup') {
 		if (!client.toTry) return console.log('You need to start a session before using this command.');
-
-		writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-		return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json"`);
+		return saveAttempts();
 	}
 	if (command === 'resume' || command === 'restore') {
 		try {
+			if (!existsSync('./toTry.json')) return console.log('Could not find anything to resume.');
 			if (!client.toTry) {
 				const range = !isNaN(parseInt(config.defaultRange)) ? config.defaultRange : 1000000;
 				client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -307,9 +306,7 @@ const startWatching = (message) => {
 			try {
 				if (!client.toTry || client.toTry.length === 0) return;
 				console.log('Auto-saving...');
-
-				writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-				return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json".`);
+				return saveAttempts();
 			}
 			catch (e) { return console.log(`The auto-save failed : ${e}`); }
 		}, 60000);
@@ -327,6 +324,11 @@ const stopWatching = () => {
 	if (client.isWatching) delete client.isWatching;
 	if (client.watchingChannel) delete client.watchingChannel;
 	return;
+};
+
+const saveAttempts = () => {
+	writeFileSync('./toTry.json', JSON.stringify(client.toTry));
+	return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json"`);
 };
 
 
