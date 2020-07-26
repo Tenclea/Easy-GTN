@@ -69,7 +69,7 @@ client.on('message', (message) => {
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 				else console.log('The input range seems to be incorrect. Switching to default one.');
 			}
-			if (!Number.isInteger(range) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
+			if (!isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
 			// Array of all possible numbers in given range
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -94,7 +94,7 @@ client.on('message', (message) => {
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 				else console.log('The input range seems to be incorrect. Switching to default one.');
 			}
-			if (!Number.isInteger(range) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
+			if (!isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
 			// Array of all possible numbers in given range
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -147,9 +147,17 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 		return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json"`);
 	}
 	if (command === 'resume' || command === 'restore') {
-		if (!client.toTry) return console.log('You need to start a session before using this command.');
-
 		try {
+			if (!client.toTry) {
+				const range = !isNaN(parseInt(config.defaultRange)) ? config.defaultRange : 1000000;
+				client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
+				client.watchingChannel = message.channel;
+
+				setTimeout(() => {
+					startGuessing();
+					startWatching(message);
+				}, 2500);
+			}
 			const toResume = JSON.parse(readFileSync('./toTry.json'));
 			const oldLength = client.toTry.length;
 
@@ -158,7 +166,6 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 			return console.log(`Successfully removed ${oldLength - client.toTry.length} previously tried values !`);
 		}
 		catch (e) { return console.log('Could not find anything to resume.'); }
-
 	}
 	if (command === 'hint') {
 		if (args[0] === 'help' || args[0] === '-h' || args[0] === '--help') {

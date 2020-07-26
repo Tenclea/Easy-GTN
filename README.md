@@ -50,9 +50,9 @@ Those are the "global variables" that are very useful to the bot.
 * [x] `hint` command (let me know if you have any other suggestions)
 * [x] `pause` command
 * [x] `watch` command > does the same as `start` without sending any messages
+* [x] Remove need to `start` before `resume`
 
 * [ ] Command Handler ? (Main file starts to look messy)
-* [ ] Remove need to `start` before `resume`
 * [ ] Save before stop in config
 * [ ] `help` command
 
