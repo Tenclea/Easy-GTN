@@ -69,13 +69,15 @@ client.on('message', (message) => {
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 				else console.log('The input range seems to be incorrect. Switching to default one.');
 			}
-			if (!isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
+			if (isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
 			// Array of all possible numbers in given range
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
 		}
 
 		console.log(`\nStarting a new guessing session ! \n${client.toTry.length} guesses to go !`);
+
+		tryLastMessages(message.channel);
 
 		startWatching(message);
 		startGuessing(message);
@@ -106,6 +108,7 @@ client.on('message', (message) => {
 			console.log('Switching from guessing to watching...');
 		}
 		startWatching(message);
+		tryLastMessages(message.channel);
 
 		return console.log(`Started a new watching session in ${client.watchingChannel.name} !\n${client.toTry.length} numbers left.`);
 	}
@@ -156,6 +159,7 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 				setTimeout(() => {
 					startGuessing();
 					startWatching(message);
+					tryLastMessages(message.channel);
 				}, 2500);
 			}
 			const toResume = JSON.parse(readFileSync('./toTry.json'));
@@ -266,6 +270,20 @@ const startGuessing = async () => {
 
 	// Here we go again
 	client.toTryLoop = setTimeout(startGuessing, timeout);
+};
+
+const tryLastMessages = (channel) => {
+	channel.fetchMessages({ limit: 100 }).then(messages => {
+		const oldLength = client.toTry.length;
+
+		messages.forEach(msg => {
+			if (msg.author.bot || client.stopLastMessages) { return client.stopLastMessages = true; }
+			else if (!isNaN(parseInt(msg.content))) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); }
+		});
+
+		if (client.stopLastMessages) delete client.stopLastMessages;
+		console.log(`Scrapped and removed ${oldLength - client.toTry.length} last tried numbers from the GTN channel.`);
+	});
 };
 
 const stopGuessing = () => {

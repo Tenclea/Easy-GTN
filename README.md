@@ -51,15 +51,14 @@ Those are the "global variables" that are very useful to the bot.
 * [x] `pause` command
 * [x] `watch` command > does the same as `start` without sending any messages
 * [x] Remove need to `start` before `resume`
+* [x] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] Save before stop in config
 * [ ] `help` command
 
 * [ ] Standby mode > Will wait for the game to begin (command can be invoked before game starts)
-* [ ] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
-
-* [ ] ? Add a 'real' mode, where you occasionally skip some messages to make it look like you're somehow "thinking" to what to choose next.
+* [ ] ? Add a 'real' mode, where you randomly skip some messages to make it look like you're somehow "thinking" to what to choose next.
 
 ## Disclaimer
 
