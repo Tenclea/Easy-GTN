@@ -113,6 +113,7 @@ client.on('message', (message) => {
 		return console.log(`Started a new watching session in ${client.watchingChannel.name} !\n${client.toTry.length} numbers left.`);
 	}
 	if (command === 'stop') {
+		if (config.saveBeforeStop) saveAttempts();
 		stopWatching();
 		stopGuessing();
 		return console.log('Successfully stopped the guessing bot.');
