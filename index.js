@@ -3,11 +3,17 @@ const { Client } = require('discord.js');
 const client = new Client();
 
 // Config variables
-const config = require('./config.json');
+let config = require('./config.json');
 const prefix = config.prefix;
 
 // Useful functions
-const { existsSync, readFileSync, writeFileSync } = require('fs');
+const { existsSync, readFileSync, watchFile, writeFileSync } = require('fs');
+
+watchFile('./config.json', () => {
+	console.log('Config file edited. Retrieving data...');
+	config = JSON.parse(readFileSync('./config.json'));
+	return console.log('Successfully updated the config variables !');
+});
 
 // Events
 client.once('ready', () => { console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
@@ -41,8 +47,7 @@ client.on('message', (message) => {
 		}
 		// Check if game ended
 		else if (message.embeds[0] && message.embeds[0].description && message.embeds[0].description.startsWith(':tada:')) {
-			stopGuessing();
-			stopWatching();
+			if (client.toTry) { stopGuessing(); stopWatching(); }
 
 			if (message.embeds[0].author.name === client.user.tag) { return console.log('Congratulations, you won the game !'); }
 			else if (message.channel.id === client.watchingChannel.id) { return console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
@@ -75,12 +80,12 @@ client.on('message', (message) => {
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
 		}
 
-		console.log(`\nStarting a new guessing session ! \n${client.toTry.length} guesses to go !`);
-
 		tryLastMessages(message.channel);
-
 		startWatching(message);
-		startGuessing(message);
+
+		console.log(`\nStarting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
+
+		startGuessing();
 
 		message.channel.startTyping();
 		return;
@@ -96,7 +101,7 @@ client.on('message', (message) => {
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 				else console.log('The input range seems to be incorrect. Switching to default one.');
 			}
-			if (!isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
+			if (isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
 			// Array of all possible numbers in given range
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -113,6 +118,8 @@ client.on('message', (message) => {
 		return console.log(`Started a new watching session in ${client.watchingChannel.name} !\n${client.toTry.length} numbers left.`);
 	}
 	if (command === 'stop') {
+		if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
+
 		if (config.saveBeforeStop) saveAttempts();
 		stopWatching();
 		stopGuessing();
@@ -287,8 +294,6 @@ const tryLastMessages = (channel) => {
 };
 
 const stopGuessing = () => {
-	if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
-
 	const GTNChannel = client.channels.get(client.watchingChannel.id);
 	if (GTNChannel) GTNChannel.stopTyping(true);
 
@@ -301,6 +306,12 @@ const stopGuessing = () => {
 };
 
 const startWatching = (message) => {
+	if (!client.attempts) client.attempts = { bot: 0, users: 0 };
+	client.isWatching = true;
+	client.watchingChannel = message.channel;
+
+	client.watchingSince = +new Date();
+
 	// Auto-save interval
 	if (config.autoSave) {
 		client.autoSave = setInterval(() => {
@@ -309,15 +320,9 @@ const startWatching = (message) => {
 				console.log('Auto-saving...');
 				return saveAttempts();
 			}
-			catch (e) { return console.log(`The auto-save failed : ${e}`); }
+			catch (e) { console.log(`The auto-save failed : ${e}`); }
 		}, 60000);
 	}
-
-	if (!client.attempts) client.attempts = { bot: 0, users: 0 };
-	client.isWatching = true;
-	client.watchingChannel = message.channel;
-
-	client.watchingSince = +new Date();
 	return;
 };
 
