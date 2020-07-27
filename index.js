@@ -121,8 +121,8 @@ client.on('message', (message) => {
 		if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
 
 		if (config.saveBeforeStop) saveAttempts();
-		stopWatching();
 		stopGuessing();
+		stopWatching();
 		return console.log('Successfully stopped the guessing bot.');
 	}
 	if (command === 'pause') {
@@ -299,8 +299,8 @@ const stopGuessing = () => {
 
 	delete client.toTry;
 	delete client.watchingChannel;
-	if (client.autoSave) clearInterval(client.autoSave);
-	if (client.toTryLoop) clearTimeout(client.toTryLoop);
+	if (client.autoSave) { clearInterval(client.autoSave); delete client.autoSave; }
+	if (client.toTryLoop) { clearTimeout(client.toTryLoop); delete client.toTryLoop; }
 
 	return;
 };
