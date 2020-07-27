@@ -53,9 +53,9 @@ Those are the "global variables" that are very useful to the bot.
 * [x] `watch` command > does the same as `start` without sending any messages
 * [x] Remove need to `start` before `resume`
 * [x] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
+* [x] Save before stop in config
 
 * [ ] Command Handler ? (Main file starts to look messy)
-* [ ] Save before stop in config
 * [ ] `help` command
 * [ ] test if config file was edited (possible ?)
 
