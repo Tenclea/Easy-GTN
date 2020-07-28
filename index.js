@@ -9,6 +9,7 @@ const prefix = config.prefix;
 // Useful functions
 const { existsSync, readFileSync, watchFile, writeFileSync } = require('fs');
 
+// Watch for edits of the config file
 watchFile('./config.json', () => {
 	console.log('Config file edited. Retrieving data...');
 	config = JSON.parse(readFileSync('./config.json'));
@@ -42,8 +43,27 @@ client.on('message', (message) => {
 		if (message.embeds[0] && message.embeds[0].footer && message.embeds[0].footer.text && message.embeds[0].footer.text.includes('Started by:')) {
 			if (!message.embeds[0].description) return;
 
-			if (message.embeds[0].description.includes('game starting in')) return console.log(`A GTN game is about to start in ${message.guild.name} !`);
-			else if (message.embeds[0].description.includes(':tada: Guess that number!')) return console.log(`A GTN game just started in ${message.guild.name} !`);
+			if (message.embeds[0].description.includes('game starting in')) { return console.log(`A GTN game is about to start in ${message.guild.name} !`); }
+			else if (message.embeds[0].description.includes(':tada: Guess that number!')) {
+				// Scrape range from message's embed
+				let range = parseInt(message.embeds[0].description.replace(/,/g, '').split('`').find(val => !isNaN(parseInt(val)) && parseInt(val) !== 1));
+				if (!range) range = config.defaultRange;
+
+				if (!config.autoStart) { return console.log(`A GTN game just started in ${message.guild.name} ! Range : 1 to ${range}.`); }
+				else if (client.toTry) { return console.log(`Could not auto-start guessing in ${message.guild.name} : The bot is already watching/guessing somewhere else.`); }
+				else {
+					client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
+
+					tryLastMessages(message.channel);
+					startWatching(message);
+
+					console.log(`\nAuto-starting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
+
+					startGuessing();
+					message.channel.startTyping();
+					return;
+				}
+			}
 		}
 		// Check if game ended
 		else if (message.embeds[0] && message.embeds[0].description && message.embeds[0].description.startsWith(':tada:')) {

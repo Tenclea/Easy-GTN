@@ -1,5 +1,6 @@
 {
 	"autoSave": true,
+	"autoStart": true,
 	"botID": "694278840855298079",
 	"defaultRange": 100000,
 	"guessInterval": 1500,

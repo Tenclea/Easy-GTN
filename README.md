@@ -29,6 +29,7 @@ A quick Discord selfbot I made that automatically plays Guess The Number (GTN) g
 Those are the "global variables" that are very useful to the bot.
 
 * `autoSave` > Whether to let the bot auto-save or not. (true/false)
+* `autoStart` > Whether to automatically start guessing numbers if a game starts in any channel. (true/false)
 * `botID` > The UserID of the Guess The Number bot.
 * `defaultRange` > The default maximum number in the GTN game. (Will be used if no args are provided to the `start` command)
 * `guessInterval` > The time to wait between each guess attempt (in ms).
@@ -54,12 +55,14 @@ Those are the "global variables" that are very useful to the bot.
 * [x] Remove need to `start` before `resume`
 * [x] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
 * [x] Save before stop in config
-* [x] Auto update config file
+* [x] Auto update config file without needing to reboot
+* [x] Auto start guessing if a game starts (configurable)
+
+* [ ] Scrape range from pinned messages
+* [ ] Check if GTN channel gets deleted (may happen ?)
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] `help` command
-
-* [ ] Standby mode > Will wait for the game to begin (command can be invoked before game starts)
 * [ ] ? Add a 'real' mode, where you randomly skip some messages to make it look like you're somehow "thinking" to what to choose next.
 
 ## Disclaimer
