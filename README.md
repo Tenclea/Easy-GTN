@@ -36,6 +36,7 @@ Those are the "global variables" that are very useful to the bot.
 * `saveBeforeStop` > Automatically save after using the the stop command if enabled (true/false).
 * `prefix` > The key used before every command.
 * `token` > The user's token to connect to.
+* `verbose` > Whether to or not to log some informations (like attempts)
 
 ## Known issues
 
@@ -58,10 +59,10 @@ Those are the "global variables" that are very useful to the bot.
 * [x] Auto update config file without needing to reboot
 * [x] Auto start guessing if a game starts (configurable)
 * [x] `checkConfig` function
+* [x] "Verbose" mode (logs every attempts, etc...)
 
 * [ ] Scrape range from pinned messages
 * [ ] Check if GTN channel gets deleted (may happen ?)
-* [ ] "Verbose" mode (logs every attempts, etc...)
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] `help` command
