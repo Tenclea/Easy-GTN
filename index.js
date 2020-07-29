@@ -7,7 +7,7 @@ let config = require('./config.json');
 const prefix = config.prefix;
 
 // Useful functions & modules
-const { existsSync, readFileSync, watchFile, writeFileSync } = require('fs');
+const { existsSync, readFileSync, unlinkSync, watchFile, writeFileSync } = require('fs');
 const chalk = require('chalk');
 
 // Watch for edits of the config file
@@ -56,26 +56,33 @@ client.on('message', (message) => {
 				if (!config.autoStart) { return console.log(`A GTN game just started in ${message.guild.name} ! Range : 1 to ${range}.`); }
 				else if (client.toTry) { return console.log(`Could not auto-start guessing in ${message.guild.name} : The bot is already watching/guessing somewhere else.`); }
 				else {
-					client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
+					setTimeout(() => {
+						client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
 
-					tryLastMessages(message.channel);
-					startWatching(message);
+						tryLastMessages(message.channel);
+						startWatching(message);
 
-					console.log(`\nAuto-starting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
+						console.log(`\nAuto-starting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
 
-					startGuessing();
-					message.channel.startTyping();
-					return;
+						startGuessing();
+						message.channel.startTyping();
+						return;
+					}, 2500);
 				}
 			}
 		}
 		// Check if game ended
 		else if (message.embeds[0] && message.embeds[0].description && message.embeds[0].description.startsWith(':tada:')) {
-			if (client.toTry) { stopGuessing(); stopWatching(); }
+			if (message.embeds[0].author.name === client.user.tag) { console.log('Congratulations, you won the game !'); }
+			else if (message.channel.id === client.watchingChannel.id) { console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
+			else { console.log(`${message.embeds[0].author.name} won a game of GTN in ${message.guild.name}.`); }
 
-			if (message.embeds[0].author.name === client.user.tag) { return console.log('Congratulations, you won the game !'); }
-			else if (message.channel.id === client.watchingChannel.id) { return console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
-			else { return console.log(`${message.embeds[0].author.name} won a game of GTN in ${message.guild.name}.`); }
+			if (client.toTry && message.channel.id === client.watchingChannel.id) {
+				stopGuessing(); stopWatching();
+				if (existsSync('./toTry.json')) unlinkSync('./toTry.json');
+			}
+
+			return;
 		}
 	}
 
@@ -278,6 +285,9 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 			client.toTry = client.toTry.filter(value => String(value)[position - 1] != numb);
 			return console.log(`Removed ${oldLength - client.toTry.length} numbers with a "${numb}" on pos ${position}.`);
 		}
+		else {
+			return console.log(chalk.red('[ERROR] - ') + `Could not find hint type : "${type}".`);
+		}
 	}
 });
 
@@ -306,8 +316,9 @@ const tryLastMessages = (channel) => {
 		const oldLength = client.toTry.length;
 
 		messages.forEach(msg => {
+			const number = parseInt(msg.content);
 			if (msg.author.bot || client.stopLastMessages) { return client.stopLastMessages = true; }
-			else if (!isNaN(parseInt(msg.content))) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); }
+			else if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); }
 		});
 
 		if (client.stopLastMessages) delete client.stopLastMessages;
@@ -339,7 +350,6 @@ const startWatching = (message) => {
 		client.autoSave = setInterval(() => {
 			try {
 				if (!client.toTry || client.toTry.length === 0) return;
-				console.log('Auto-saving...');
 				return saveAttempts();
 			}
 			catch (e) { console.log(`The auto-save failed : ${e}`); }
@@ -356,7 +366,7 @@ const stopWatching = () => {
 
 const saveAttempts = () => {
 	writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-	return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json"`);
+	return console.log(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
 };
 
 const checkConfig = (conf) => {
