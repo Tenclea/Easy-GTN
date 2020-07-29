@@ -61,6 +61,7 @@ Those are the "global variables" that are very useful to the bot.
 
 * [ ] Scrape range from pinned messages
 * [ ] Check if GTN channel gets deleted (may happen ?)
+* [ ] "Verbose" mode (logs every attempts, etc...)
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] `help` command

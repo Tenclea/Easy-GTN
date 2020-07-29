@@ -33,9 +33,10 @@ client.on('message', (message) => {
 		client.attempts.users++;
 		client.toTry.splice(client.toTry.indexOf(number), 1);
 
-		if (message.author.id === client.user.id) console.log(`You tried ${number}`);
-		else console.log(`Somebody else tried ${number}`);
-
+		if (config.verbose) {
+			if (message.author.id === client.user.id) console.log(`You tried ${number}`);
+			else console.log(`Somebody else tried ${number}`);
+		}
 		if (client.toTry.length === 1 && client.isWatching) console.log(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${client.toTry[0]} !!`);
 		return;
 	}
@@ -292,7 +293,7 @@ const startGuessing = async () => {
 	client.watchingChannel.send(letsTryThis)
 		.then(() => {
 			client.attempts.bot++;
-			console.log(`Tried number ${letsTryThis}`);
+			if (config.verbose) console.log(`Tried number ${letsTryThis}`);
 		})
 		.catch(e => console.log(`Could not try number ${letsTryThis} : ${e}`));
 
