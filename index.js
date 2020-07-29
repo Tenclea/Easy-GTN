@@ -6,18 +6,21 @@ const client = new Client();
 let config = require('./config.json');
 const prefix = config.prefix;
 
-// Useful functions
+// Useful functions & modules
 const { existsSync, readFileSync, watchFile, writeFileSync } = require('fs');
+const chalk = require('chalk');
 
 // Watch for edits of the config file
 watchFile('./config.json', () => {
 	console.log('Config file edited. Retrieving data...');
 	config = JSON.parse(readFileSync('./config.json'));
-	return console.log('Successfully updated the config variables !');
+	console.log('Successfully updated the config variables !');
+
+	return checkConfig(config);
 });
 
 // Events
-client.once('ready', () => { console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
+client.once('ready', () => { checkConfig(config); console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
 
 client.on('message', (message) => {
 
@@ -94,7 +97,6 @@ client.on('message', (message) => {
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 				else console.log('The input range seems to be incorrect. Switching to default one.');
 			}
-			if (isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
 			// Array of all possible numbers in given range
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -121,7 +123,6 @@ client.on('message', (message) => {
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
 				else console.log('The input range seems to be incorrect. Switching to default one.');
 			}
-			if (isNaN(parseInt(range)) || range <= 2 || range > 1000000) return console.log('The default range seems to be wrong. Make sure to check in the config file that the range is an integer between 2 and 1,000,000.');
 
 			// Array of all possible numbers in given range
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -355,6 +356,20 @@ const stopWatching = () => {
 const saveAttempts = () => {
 	writeFileSync('./toTry.json', JSON.stringify(client.toTry));
 	return console.log(`Successfully written ${client.toTry.length} left attempts to "toTry.json"`);
+};
+
+const checkConfig = (conf) => {
+	const errMsg = chalk.red('[CONFIG FILE ERROR]') + ' - ';
+	if (typeof conf.autoSave !== 'boolean') console.error(errMsg + 'The autoSave config variable is misconfigured. It should be true or false.');
+	if (typeof conf.autoStart !== 'boolean') console.error(errMsg + 'The autoStart config variable is misconfigured. It should be true or false.');
+	if (typeof conf.botID !== 'string') console.error(errMsg + 'The botID config variable is misconfigured. It should be a valid User/Bot ID.');
+	if (typeof conf.defaultRange !== 'number' || conf.defaultRange <= 2 || conf.defaultRange > 1000000) console.error('The defaultRange config variable is misconfigured. Make sure to that the range is an integer between 2 and 1,000,000.');
+	if (typeof conf.guessInterval !== 'number') console.error(errMsg + 'The guessInterval config variable is misconfigured. It should be an integer.');
+	if (typeof conf.prefix !== 'string') console.error(errMsg + 'The prefix config variable is misconfigured. It should be a string.');
+	if (typeof conf.saveBeforeStop !== 'boolean') console.error(errMsg + 'The saveBeforeStop config variable is misconfigured. It should be true or false.');
+	if (typeof conf.token !== 'string') console.error(errMsg + 'The token config variable is misconfigured. It should be a string.');
+
+	return;
 };
 
 
