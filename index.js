@@ -291,6 +291,16 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 	}
 });
 
+client.on('channelDelete', (channel) => {
+	if (client.watchingChannel && channel.id === client.watchingChannel.id) {
+		console.log('The GTN channel was removed !');
+		if (existsSync('./toTry.json')) unlinkSync('./toTry.json');
+		stopGuessing();
+		stopWatching();
+		console.log('Stopped the bot.');
+	}
+});
+
 
 // Loop with variable timeout
 const startGuessing = async () => {
@@ -332,7 +342,6 @@ const stopGuessing = () => {
 
 	delete client.toTry;
 	delete client.watchingChannel;
-	if (client.autoSave) { clearInterval(client.autoSave); delete client.autoSave; }
 	if (client.toTryLoop) { clearTimeout(client.toTryLoop); delete client.toTryLoop; }
 
 	return;
@@ -361,6 +370,7 @@ const startWatching = (message) => {
 const stopWatching = () => {
 	if (client.isWatching) delete client.isWatching;
 	if (client.watchingChannel) delete client.watchingChannel;
+	if (client.autoSave) { clearInterval(client.autoSave); delete client.autoSave; }
 	return;
 };
 
