@@ -60,9 +60,9 @@ Those are the "global variables" that are very useful to the bot.
 * [x] Auto start guessing if a game starts (configurable)
 * [x] `checkConfig` function
 * [x] "Verbose" mode (logs every attempts, etc...)
+* [x] Check if GTN channel gets deleted (may happen ?)
 
 * [ ] Scrape range from pinned messages
-* [ ] Check if GTN channel gets deleted (may happen ?)
 * [ ] Max session length (config)
 
 * [ ] Command Handler ? (Main file starts to look messy)
