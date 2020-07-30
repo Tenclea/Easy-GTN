@@ -14,13 +14,14 @@ const winston = require('winston');
 const logger = winston.createLogger({
 	transports: [new winston.transports.Console()],
 	format: winston.format.printf(log => {
-		const message = ` - ${log.message}`;
-		if (log.level === 'info') return chalk.green(`[${log.level.toUpperCase()}]`) + message;
-		else if (log.level === 'warn') return chalk.yellow(`[${log.level.toUpperCase()}]`) + message;
+		const message = ` » ${log.message}`;
+		if (log.level === 'info') return chalk.green(`[${log.level.toUpperCase()}]`.padEnd(7, ' ')) + message;
+		else if (log.level === 'warn') return chalk.yellow(`[${log.level.toUpperCase()}]`.padEnd(7, ' ')) + message;
 		else if (log.level === 'error') return chalk.red(`[${log.level.toUpperCase()}]`) + message;
 		else if (log.level === 'debug') return chalk.blue(`[${log.level.toUpperCase()}]`) + message;
 		else return `[${log.level.toUpperCase()}]` + message;
 	}),
+	level: config.verbose ? 'debug' : 'info',
 });
 
 // Watch for edits of the config file
@@ -391,16 +392,15 @@ const saveAttempts = () => {
 };
 
 const checkConfig = (conf) => {
-	const errMsg = chalk.red('[CONFIG FILE ERROR]') + ' - ';
-	if (typeof conf.autoSave !== 'boolean') logger.error(errMsg + 'The autoSave config variable is misconfigured. It should be true or false.');
-	if (typeof conf.autoStart !== 'boolean') logger.error(errMsg + 'The autoStart config variable is misconfigured. It should be true or false.');
-	if (typeof conf.botID !== 'string') logger.error(errMsg + 'The botID config variable is misconfigured. It should be a valid User/Bot ID.');
+	if (typeof conf.autoSave !== 'boolean') logger.error('The autoSave config variable is misconfigured. It should be true or false.');
+	if (typeof conf.autoStart !== 'boolean') logger.error('The autoStart config variable is misconfigured. It should be true or false.');
+	if (typeof conf.botID !== 'string') logger.error('The botID config variable is misconfigured. It should be a valid User/Bot ID string.');
 	if (typeof conf.defaultRange !== 'number' || conf.defaultRange <= 2 || conf.defaultRange > 1000000) logger.error('The defaultRange config variable is misconfigured. Make sure to that the range is an integer between 2 and 1,000,000.');
-	if (typeof conf.guessInterval !== 'number') logger.error(errMsg + 'The guessInterval config variable is misconfigured. It should be an integer.');
-	if (typeof conf.prefix !== 'string') logger.error(errMsg + 'The prefix config variable is misconfigured. It should be a string.');
-	if (typeof conf.saveBeforeStop !== 'boolean') logger.error(errMsg + 'The saveBeforeStop config variable is misconfigured. It should be true or false.');
-	if (typeof conf.token !== 'string') logger.error(errMsg + 'The token config variable is misconfigured. It should be a string.');
-	if (typeof conf.verbose !== 'boolean') logger.error(errMsg + 'The verbose config variable is misconfigured. It should be true or false.');
+	if (typeof conf.guessInterval !== 'number') logger.error('The guessInterval config variable is misconfigured. It should be an integer.');
+	if (typeof conf.prefix !== 'string') logger.error('The prefix config variable is misconfigured. It should be a string.');
+	if (typeof conf.saveBeforeStop !== 'boolean') logger.error('The saveBeforeStop config variable is misconfigured. It should be true or false.');
+	if (typeof conf.token !== 'string') logger.error('The token config variable is misconfigured. It should be a string.');
+	if (typeof conf.verbose !== 'boolean') logger.error('The verbose config variable is misconfigured. It should be true or false.');
 
 	return;
 };
