@@ -1,6 +1,6 @@
 # Easy Guess The Number
 
-A quick Discord selfbot I made that automatically plays Guess The Number (GTN) games.
+A "advanced" Discord selfbot I made that automatically plays Guess The Number (GTN) games.
 
 ## Requirements
 
