@@ -313,7 +313,6 @@ client.on('channelDelete', (channel) => {
 	}
 });
 
-
 // Loop with variable timeout
 const startGuessing = async () => {
 	// Added random timeout to make the bot look more 'human'.
@@ -393,14 +392,15 @@ const saveAttempts = () => {
 
 const checkConfig = (conf) => {
 	const errMsg = chalk.red('[CONFIG FILE ERROR]') + ' - ';
-	if (typeof conf.autoSave !== 'boolean') console.error(errMsg + 'The autoSave config variable is misconfigured. It should be true or false.');
-	if (typeof conf.autoStart !== 'boolean') console.error(errMsg + 'The autoStart config variable is misconfigured. It should be true or false.');
-	if (typeof conf.botID !== 'string') console.error(errMsg + 'The botID config variable is misconfigured. It should be a valid User/Bot ID.');
-	if (typeof conf.defaultRange !== 'number' || conf.defaultRange <= 2 || conf.defaultRange > 1000000) console.error('The defaultRange config variable is misconfigured. Make sure to that the range is an integer between 2 and 1,000,000.');
-	if (typeof conf.guessInterval !== 'number') console.error(errMsg + 'The guessInterval config variable is misconfigured. It should be an integer.');
-	if (typeof conf.prefix !== 'string') console.error(errMsg + 'The prefix config variable is misconfigured. It should be a string.');
-	if (typeof conf.saveBeforeStop !== 'boolean') console.error(errMsg + 'The saveBeforeStop config variable is misconfigured. It should be true or false.');
-	if (typeof conf.token !== 'string') console.error(errMsg + 'The token config variable is misconfigured. It should be a string.');
+	if (typeof conf.autoSave !== 'boolean') logger.error(errMsg + 'The autoSave config variable is misconfigured. It should be true or false.');
+	if (typeof conf.autoStart !== 'boolean') logger.error(errMsg + 'The autoStart config variable is misconfigured. It should be true or false.');
+	if (typeof conf.botID !== 'string') logger.error(errMsg + 'The botID config variable is misconfigured. It should be a valid User/Bot ID.');
+	if (typeof conf.defaultRange !== 'number' || conf.defaultRange <= 2 || conf.defaultRange > 1000000) logger.error('The defaultRange config variable is misconfigured. Make sure to that the range is an integer between 2 and 1,000,000.');
+	if (typeof conf.guessInterval !== 'number') logger.error(errMsg + 'The guessInterval config variable is misconfigured. It should be an integer.');
+	if (typeof conf.prefix !== 'string') logger.error(errMsg + 'The prefix config variable is misconfigured. It should be a string.');
+	if (typeof conf.saveBeforeStop !== 'boolean') logger.error(errMsg + 'The saveBeforeStop config variable is misconfigured. It should be true or false.');
+	if (typeof conf.token !== 'string') logger.error(errMsg + 'The token config variable is misconfigured. It should be a string.');
+	if (typeof conf.verbose !== 'boolean') logger.error(errMsg + 'The verbose config variable is misconfigured. It should be true or false.');
 
 	return;
 };
