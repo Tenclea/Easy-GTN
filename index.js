@@ -21,7 +21,7 @@ const logger = winston.createLogger({
 		else if (log.level === 'debug') return chalk.blue(`[${log.level.toUpperCase()}]`) + message;
 		else return `[${log.level.toUpperCase()}]` + message;
 	}),
-	level: config.verbose ? 'debug' : 'info',
+	level: config.debugMode ? 'debug' : 'info',
 });
 
 // Watch for edits of the config file
@@ -46,10 +46,9 @@ client.on('message', (message) => {
 		client.attempts.users++;
 		client.toTry.splice(client.toTry.indexOf(number), 1);
 
-		if (config.verbose) {
-			if (message.author.id === client.user.id) logger.debug(`You tried ${number}`);
-			else logger.debug(`Somebody else tried ${number}`);
-		}
+		if (message.author.id === client.user.id) logger.debug(`You tried ${number}`);
+		else logger.debug(`Somebody else tried ${number}`);
+
 		if (client.toTry.length === 1 && client.isWatching) logger.warn(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${client.toTry[0]} !!`);
 		return;
 	}
@@ -325,7 +324,7 @@ const startGuessing = async () => {
 	client.watchingChannel.send(letsTryThis)
 		.then(() => {
 			client.attempts.bot++;
-			if (config.verbose) logger.debug(`Tried number ${letsTryThis}`);
+			logger.debug(`Tried number ${letsTryThis}`);
 		})
 		.catch(e => logger.error(`Could not try number ${letsTryThis} : ${e}`));
 
@@ -395,13 +394,12 @@ const checkConfig = (conf) => {
 	if (typeof conf.autoSave !== 'boolean') logger.error('The autoSave config variable is misconfigured. It should be true or false.');
 	if (typeof conf.autoStart !== 'boolean') logger.error('The autoStart config variable is misconfigured. It should be true or false.');
 	if (typeof conf.botID !== 'string') logger.error('The botID config variable is misconfigured. It should be a valid User/Bot ID string.');
+	if (typeof conf.debugMode !== 'boolean') logger.error('The verbose config variable is misconfigured. It should be true or false.');
 	if (typeof conf.defaultRange !== 'number' || conf.defaultRange <= 2 || conf.defaultRange > 1000000) logger.error('The defaultRange config variable is misconfigured. Make sure to that the range is an integer between 2 and 1,000,000.');
 	if (typeof conf.guessInterval !== 'number') logger.error('The guessInterval config variable is misconfigured. It should be an integer.');
 	if (typeof conf.prefix !== 'string') logger.error('The prefix config variable is misconfigured. It should be a string.');
 	if (typeof conf.saveBeforeStop !== 'boolean') logger.error('The saveBeforeStop config variable is misconfigured. It should be true or false.');
 	if (typeof conf.token !== 'string') logger.error('The token config variable is misconfigured. It should be a string.');
-	if (typeof conf.verbose !== 'boolean') logger.error('The verbose config variable is misconfigured. It should be true or false.');
-
 	return;
 };
 

@@ -31,12 +31,12 @@ Those are the "global variables" that are very useful to the bot.
 * `autoSave` > Whether to let the bot auto-save or not. (true/false)
 * `autoStart` > Whether to automatically start guessing numbers if a game starts in any channel. (true/false)
 * `botID` > The UserID of the Guess The Number bot.
+* `debugMode` > Whether to or not to log some informations (like attempts)
 * `defaultRange` > The default maximum number in the GTN game. (Will be used if no args are provided to the `start` command)
 * `guessInterval` > The time to wait between each guess attempt (in ms).
 * `saveBeforeStop` > Automatically save after using the the stop command if enabled (true/false).
 * `prefix` > The key used before every command.
 * `token` > The user's token to connect to.
-* `verbose` > Whether to or not to log some informations (like attempts)
 
 ## Known issues
 
