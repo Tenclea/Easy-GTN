@@ -1,3 +1,14 @@
+process.title = 'Easy-GTN - by Tenclea';
+console.clear();
+
+console.log(`
+ _____                 _____ _____ _____ 
+|   __|___ ___ _ _ ___|   __|_   _|   | |
+|   __| .'|_ -| | |___|  |  | | | | | | |
+|_____|__,|___|_  |   |_____| |_| |_|___|
+              |___|          - by Tenclea
+`);
+
 // Client initialization
 const { Client } = require('discord.js');
 const client = new Client();
@@ -8,27 +19,32 @@ const prefix = config.prefix;
 
 // Useful functions & modules
 const { existsSync, readFileSync, unlinkSync, watchFile, writeFileSync } = require('fs');
+const { format, loggers, transports } = require('winston');
 const chalk = require('chalk');
 
-const winston = require('winston');
-const logger = winston.createLogger({
-	transports: [new winston.transports.Console()],
-	format: winston.format.printf(log => {
+loggers.add('main', {
+	transports: [new transports.Console()],
+	format: format.printf(log => {
 		const message = ` » ${log.message}`;
-		if (log.level === 'info') return chalk.green(`[${log.level.toUpperCase()}]`.padEnd(7, ' ')) + message;
-		else if (log.level === 'warn') return chalk.yellow(`[${log.level.toUpperCase()}]`.padEnd(7, ' ')) + message;
+		if (log.level === 'info') return chalk.green(`[${log.level.toUpperCase()}] `) + message;
+		else if (log.level === 'warn') return chalk.yellow(`[${log.level.toUpperCase()}] `) + message;
 		else if (log.level === 'error') return chalk.red(`[${log.level.toUpperCase()}]`) + message;
 		else if (log.level === 'debug') return chalk.blue(`[${log.level.toUpperCase()}]`) + message;
 		else return `[${log.level.toUpperCase()}]` + message;
 	}),
 	level: config.debugMode ? 'debug' : 'info',
 });
+let logger = loggers.get('main');
 
 // Watch for edits of the config file
 watchFile('./config.json', () => {
+	// Reads new config & updates it
 	config = JSON.parse(readFileSync('./config.json'));
-	logger.info('Updated the config variables.');
+	// Updates logger
+	loggers.get('main').level = config.debugMode ? 'debug' : 'info';
+	logger = loggers.get('main');
 
+	logger.info('Updated the config variables.');
 	return checkConfig(config);
 });
 
@@ -74,7 +90,7 @@ client.on('message', (message) => {
 						tryLastMessages(message.channel);
 						startWatching(message);
 
-						logger.info(`\nAuto-starting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
+						logger.info(`Auto-starting a new guessing session in ${client.watchingChannel.name} ! ${client.toTry.length} guesses to go !`);
 
 						startGuessing();
 						message.channel.startTyping();
@@ -171,6 +187,7 @@ client.on('message', (message) => {
 
 		if (client.toTryLoop) {
 			clearTimeout(client.toTryLoop); delete client.toTryLoop;
+			saveAttempts();
 			return logger.info('Successfully paused the guesses. Use the pause command again to resume.');
 		}
 		else { startGuessing(); return logger.info('Successfully resumed the guesses. Use the pause command again time to pause.'); }
@@ -194,7 +211,7 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 	}
 	if (command === 'save' || command === 'backup') {
 		if (!client.toTry) return logger.error('You need to start a session before using the save command.');
-		return saveAttempts();
+		return saveAttempts(true);
 	}
 	if (command === 'resume' || command === 'restore') {
 		try {
@@ -210,12 +227,11 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 					tryLastMessages(message.channel);
 				}, 2500);
 			}
-			const toResume = JSON.parse(readFileSync('./toTry.json'));
-			const oldLength = client.toTry.length;
 
 			// Removes every values that were used in the saved session.
+			const toResume = JSON.parse(readFileSync('./toTry.json'));
 			client.toTry = client.toTry.filter(value => toResume.includes(value));
-			return logger.info(`Successfully removed ${oldLength - client.toTry.length} previously tried values !`);
+			return logger.info(`Successfully removed the previously tried values. ${client.toTry.length} numbers left !`);
 		}
 		catch (e) { return logger.error('An error occurred : ' + e); }
 	}
@@ -297,9 +313,7 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 			client.toTry = client.toTry.filter(value => String(value)[position - 1] != numb);
 			return logger.info(`Removed ${oldLength - client.toTry.length} numbers with a "${numb}" on pos ${position}.`);
 		}
-		else {
-			return logger.error(`Could not find hint type : "${type}".`);
-		}
+		else { return logger.error(`Could not find hint type : "${type}".`); }
 	}
 });
 
@@ -385,9 +399,10 @@ const stopWatching = () => {
 	return;
 };
 
-const saveAttempts = () => {
+const saveAttempts = (manual = false) => {
 	writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-	return logger.info(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
+	if (manual) return logger.info(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
+	return logger.debug(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
 };
 
 const checkConfig = (conf) => {

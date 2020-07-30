@@ -4,7 +4,7 @@ A quick Discord selfbot I made that automatically plays Guess The Number (GTN) g
 
 ## Requirements
 
-* [Node.js `v14.6.0` ](https://nodejs.org/en/) (wasn't tested on other versions)
+* [Node.js `v14.7.0` ](https://nodejs.org/en/) (wasn't tested on other versions)
 * Your Discord user token
 * [This bot](https://discord.com/oauth2/authorize?client_id=694278840855298079&permissions=8&scope=bot) (I may add support for other ones in the future)
 * An IQ >= 60
@@ -46,24 +46,9 @@ Those are the "global variables" that are very useful to the bot.
 
 ## TODO
 
-* [x] Make sure that the channel the number is sent in is the GTN channel.
-* [x] `save` command > writes list to file in order to `resume` later
-* [x] Add a 'time spent guessing' to the `stats` command
-* [x] Auto save feature (configurable)
-* [x] `hint` command (let me know if you have any other suggestions)
-* [x] `pause` command
-* [x] `watch` command > does the same as `start` without sending any messages
-* [x] Remove need to `start` before `resume`
-* [x] Fetch last 100 messages (Discord limit) and check if any numbers have already been tried
-* [x] Save before stop in config
-* [x] Auto update config file without needing to reboot
-* [x] Auto start guessing if a game starts (configurable)
-* [x] `checkConfig` function
-* [x] "Verbose" mode (logs every attempts, etc...)
-* [x] Check if GTN channel gets deleted (may happen ?)
-
 * [ ] Scrape range from pinned messages
-* [ ] Max session length (config)
+* [ ] Max session duration (config)
+* [ ] Colorize `stats` and `hint help` messages
 
 * [ ] Command Handler ? (Main file starts to look messy)
 * [ ] `help` command
