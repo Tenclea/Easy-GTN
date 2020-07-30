@@ -10,17 +10,29 @@ const prefix = config.prefix;
 const { existsSync, readFileSync, unlinkSync, watchFile, writeFileSync } = require('fs');
 const chalk = require('chalk');
 
+const winston = require('winston');
+const logger = winston.createLogger({
+	transports: [new winston.transports.Console()],
+	format: winston.format.printf(log => {
+		const message = ` - ${log.message}`;
+		if (log.level === 'info') return chalk.green(`[${log.level.toUpperCase()}]`) + message;
+		else if (log.level === 'warn') return chalk.yellow(`[${log.level.toUpperCase()}]`) + message;
+		else if (log.level === 'error') return chalk.red(`[${log.level.toUpperCase()}]`) + message;
+		else if (log.level === 'debug') return chalk.blue(`[${log.level.toUpperCase()}]`) + message;
+		else return `[${log.level.toUpperCase()}]` + message;
+	}),
+});
+
 // Watch for edits of the config file
 watchFile('./config.json', () => {
-	console.log('Config file edited. Retrieving data...');
 	config = JSON.parse(readFileSync('./config.json'));
-	console.log('Successfully updated the config variables !');
+	logger.info('Updated the config variables.');
 
 	return checkConfig(config);
 });
 
 // Events
-client.once('ready', () => { checkConfig(config); console.log(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
+client.once('ready', () => { checkConfig(config); logger.info(`Logged in as ${client.user.tag} on ${new Date().toUTCString()}!\n`); });
 
 client.on('message', (message) => {
 
@@ -34,10 +46,10 @@ client.on('message', (message) => {
 		client.toTry.splice(client.toTry.indexOf(number), 1);
 
 		if (config.verbose) {
-			if (message.author.id === client.user.id) console.log(`You tried ${number}`);
-			else console.log(`Somebody else tried ${number}`);
+			if (message.author.id === client.user.id) logger.debug(`You tried ${number}`);
+			else logger.debug(`Somebody else tried ${number}`);
 		}
-		if (client.toTry.length === 1 && client.isWatching) console.log(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${client.toTry[0]} !!`);
+		if (client.toTry.length === 1 && client.isWatching) logger.warn(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${client.toTry[0]} !!`);
 		return;
 	}
 
@@ -47,14 +59,14 @@ client.on('message', (message) => {
 		if (message.embeds[0] && message.embeds[0].footer && message.embeds[0].footer.text && message.embeds[0].footer.text.includes('Started by:')) {
 			if (!message.embeds[0].description) return;
 
-			if (message.embeds[0].description.includes('game starting in')) { return console.log(`A GTN game is about to start in ${message.guild.name} !`); }
+			if (message.embeds[0].description.includes('game starting in')) { return logger.info(`A GTN game is about to start in ${message.guild.name} !`); }
 			else if (message.embeds[0].description.includes(':tada: Guess that number!')) {
 				// Scrape range from message's embed
 				let range = parseInt(message.embeds[0].description.replace(/,/g, '').split('`').find(val => !isNaN(parseInt(val)) && parseInt(val) !== 1));
 				if (!range) range = config.defaultRange;
 
-				if (!config.autoStart) { return console.log(`A GTN game just started in ${message.guild.name} ! Range : 1 to ${range}.`); }
-				else if (client.toTry) { return console.log(`Could not auto-start guessing in ${message.guild.name} : The bot is already watching/guessing somewhere else.`); }
+				if (!config.autoStart) { return logger.info(`A GTN game just started in ${message.guild.name} ! Range : 1 to ${range}.`); }
+				else if (client.toTry) { return logger.info(`Could not auto-start guessing in ${message.guild.name} : The bot is already watching/guessing somewhere else.`); }
 				else {
 					setTimeout(() => {
 						client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -62,7 +74,7 @@ client.on('message', (message) => {
 						tryLastMessages(message.channel);
 						startWatching(message);
 
-						console.log(`\nAuto-starting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
+						logger.info(`\nAuto-starting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
 
 						startGuessing();
 						message.channel.startTyping();
@@ -73,9 +85,9 @@ client.on('message', (message) => {
 		}
 		// Check if game ended
 		else if (message.embeds[0] && message.embeds[0].description && message.embeds[0].description.startsWith(':tada:')) {
-			if (message.embeds[0].author.name === client.user.tag) { console.log('Congratulations, you won the game !'); }
-			else if (message.channel.id === client.watchingChannel.id) { console.log(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
-			else { console.log(`${message.embeds[0].author.name} won a game of GTN in ${message.guild.name}.`); }
+			if (message.embeds[0].author.name === client.user.tag) { logger.info('Congratulations, you won the game !'); }
+			else if (message.channel.id === client.watchingChannel.id) { logger.info(`${message.embeds[0].author.name} won the GTN game.. You'll have better luck next time :(`); }
+			else { logger.info(`${message.embeds[0].author.name} won a game of GTN in ${message.guild.name}.`); }
 
 			if (client.toTry && message.channel.id === client.watchingChannel.id) {
 				stopGuessing(); stopWatching();
@@ -95,7 +107,7 @@ client.on('message', (message) => {
 
 	if (!command) return;
 	if (command === 'start') {
-		if (client.toTryLoop) return console.log('It seems that the bot is already trying to guess the number somewhere.');
+		if (client.toTryLoop) return logger.error(`Could not start guessing in ${message.guild.name}. It seems that the bot is already trying to guess the number somewhere else.`);
 
 		if (!client.toTry || client.toTry.length === 0) {
 			// Sets the game's range
@@ -103,7 +115,7 @@ client.on('message', (message) => {
 			if (args[0]) {
 				const newRange = parseInt(args[0]);
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
-				else console.log('The input range seems to be incorrect. Switching to default one.');
+				else logger.warn('The input range seems to be incorrect. Switching to default one.');
 			}
 
 			// Array of all possible numbers in given range
@@ -113,7 +125,7 @@ client.on('message', (message) => {
 		tryLastMessages(message.channel);
 		startWatching(message);
 
-		console.log(`\nStarting a new guessing session in ${client.watchingChannel.name} ! \n${client.toTry.length} guesses to go !`);
+		logger.info(`Starting a new guessing session in ${client.watchingChannel.name} ! ${client.toTry.length} guesses to go !`);
 
 		startGuessing();
 
@@ -121,7 +133,7 @@ client.on('message', (message) => {
 		return;
 	}
 	if (command === 'watch') {
-		if (client.isWatching && !client.toTryLoop) return console.log('It seems that the bot is already watching a channel.');
+		if (client.isWatching && !client.toTryLoop) return logger.error(`Could not start watching for guesses in ${message.guild.name}. It seems that the bot is already watching somewhere else.`);
 
 		if (!client.toTry) {
 			// Sets the game's range
@@ -129,7 +141,7 @@ client.on('message', (message) => {
 			if (args[0]) {
 				const newRange = parseInt(args[0]);
 				if (!isNaN(newRange) && newRange >= 2 && newRange <= 1000000) range = newRange;
-				else console.log('The input range seems to be incorrect. Switching to default one.');
+				else logger.warn('The input range seems to be incorrect. Switching to default one.');
 			}
 
 			// Array of all possible numbers in given range
@@ -139,29 +151,29 @@ client.on('message', (message) => {
 			const bckp = client.toTry;
 			stopGuessing();
 			client.toTry = bckp;
-			console.log('Switching from guessing to watching...');
+			logger.info('Switching from guessing to watching...');
 		}
 		startWatching(message);
 		tryLastMessages(message.channel);
 
-		return console.log(`Started a new watching session in ${client.watchingChannel.name} !\n${client.toTry.length} numbers left.`);
+		return logger.info(`Started a new watching session in ${client.watchingChannel.name} ! ${client.toTry.length} numbers left.`);
 	}
 	if (command === 'stop') {
-		if (!client.toTry) return console.log('The bot is not trying to find any answers yet !');
+		if (!client.toTry) return logger.error('Could not stop : The bot is not trying to find any answers yet !');
 
 		if (config.saveBeforeStop) saveAttempts();
 		stopGuessing();
 		stopWatching();
-		return console.log('Successfully stopped the guessing bot.');
+		return logger.info('Successfully stopped the guessing bot.');
 	}
 	if (command === 'pause') {
-		if (!client.toTry) return console.log('You need to start a session before using this command.');
+		if (!client.toTry) return logger.error('You need to start a session before using the pause command.');
 
 		if (client.toTryLoop) {
 			clearTimeout(client.toTryLoop); delete client.toTryLoop;
-			return console.log('Successfully paused the guesses. Use the pause command a second time to resume.');
+			return logger.info('Successfully paused the guesses. Use the pause command again to resume.');
 		}
-		else { startGuessing(); return console.log('Successfully resumed the guesses. Use the pause command another second time to pause.'); }
+		else { startGuessing(); return logger.info('Successfully resumed the guesses. Use the pause command again time to pause.'); }
 	}
 	if (command === 'stats') {
 		const uptime = client.watchingSince ? (+new Date() - client.watchingSince) : 0;
@@ -181,12 +193,12 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 `);
 	}
 	if (command === 'save' || command === 'backup') {
-		if (!client.toTry) return console.log('You need to start a session before using this command.');
+		if (!client.toTry) return logger.error('You need to start a session before using the save command.');
 		return saveAttempts();
 	}
 	if (command === 'resume' || command === 'restore') {
 		try {
-			if (!existsSync('./toTry.json')) return console.log('Could not find anything to resume.');
+			if (!existsSync('./toTry.json')) return logger.error('Could not find anything to resume.');
 			if (!client.toTry) {
 				const range = !isNaN(parseInt(config.defaultRange)) ? config.defaultRange : 1000000;
 				client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -203,9 +215,9 @@ Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFi
 
 			// Removes every values that were used in the saved session.
 			client.toTry = client.toTry.filter(value => toResume.includes(value));
-			return console.log(`Successfully removed ${oldLength - client.toTry.length} previously tried values !`);
+			return logger.info(`Successfully removed ${oldLength - client.toTry.length} previously tried values !`);
 		}
-		catch (e) { return console.log('Could not find anything to resume.'); }
+		catch (e) { return logger.error('An error occurred : ' + e); }
 	}
 	if (command === 'hint') {
 		if (args[0] === 'help' || args[0] === '-h' || args[0] === '--help') {
@@ -231,73 +243,73 @@ notAtPos (nap) > Only keeps all numbers without a specific number at the chosen 
 =====================================================================
 `);
 		}
-		if (!client.toTry) return console.log('You need to start a session before using this command.');
+		if (!client.toTry) return logger.error('You need to start a session before using this command.');
 
-		if (!args[0]) return console.log(`You need to choose a type of hint ! (see ${config.prefix}hint help)`);
+		if (!args[0]) return logger.error(`You need to choose a type of hint ! (see ${config.prefix}hint help)`);
 		const type = args[0].toLowerCase();
 		const number = parseInt(args[1]);
 
 		const oldLength = client.toTry.length;
 
 		if (type === 'biggerthan' || type === 'bt') {
-			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			if (isNaN(number)) return logger.error(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
 			client.toTry = client.toTry.filter(value => value >= number);
-			return console.log(`Removed ${oldLength - client.toTry.length} numbers smaller than ${number}.`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} numbers smaller than ${number}.`);
 		}
 		else if (type === 'smallerthan' || type === 'st') {
-			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			if (isNaN(number)) return logger.error(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
 			client.toTry = client.toTry.filter(value => value <= number);
-			return console.log(`Removed ${oldLength - client.toTry.length} numbers bigger than ${number}.`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} numbers bigger than ${number}.`);
 		}
 		else if (type === 'isodd' || type === 'io') {
 			client.toTry = client.toTry.filter(value => value % 2 !== 0);
-			return console.log(`Removed ${oldLength - client.toTry.length} even numbers.`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} even numbers.`);
 		}
 		else if (type === 'iseven' || type === 'ie') {
 			client.toTry = client.toTry.filter(value => value % 2 === 0);
-			return console.log(`Removed ${oldLength - client.toTry.length} odd numbers.`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} odd numbers.`);
 		}
 		else if (type === 'hasmultiple' || type === 'hm') {
-			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			if (isNaN(number)) return logger.error(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
 			client.toTry = client.toTry.filter(value => [...String(value).matchAll(new RegExp(number, 'gi'))].map(a => a[0]).length > 1);
-			return console.log(`Removed ${oldLength - client.toTry.length} numbers without multiple "${number}".`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} numbers without multiple "${number}".`);
 		}
 		else if (type === 'nothasmultiple' || type === 'nhm') {
-			if (isNaN(number)) return console.log(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
+			if (isNaN(number)) return logger.error(`You need to choose a valid number ! (see ${config.prefix}hint help)`);
 
 			client.toTry = client.toTry.filter(value => [...String(value).matchAll(new RegExp(number, 'gi'))].map(a => a[0]).length === 1);
 
-			return console.log(`Removed ${oldLength - client.toTry.length} numbers with multiple "${number}".`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} numbers with multiple "${number}".`);
 		}
 		else if (type === 'atpos' || type === 'ap') {
 			const position = number; const numb = parseInt(args[2]);
-			if (isNaN(position)) return console.log(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
-			if (isNaN(numb)) return console.log(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
+			if (isNaN(position)) return logger.error(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
+			if (isNaN(numb)) return logger.error(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
 
 			client.toTry = client.toTry.filter(value => String(value)[position - 1] == numb);
-			return console.log(`Removed ${oldLength - client.toTry.length} numbers without a "${numb}" on pos ${position}.`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} numbers without a "${numb}" on pos ${position}.`);
 		}
 		else if (type === 'notatpos' || type === 'nap') {
 			const position = number; const numb = parseInt(args[2]);
-			if (isNaN(position)) return console.log(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
-			if (isNaN(numb)) return console.log(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
+			if (isNaN(position)) return logger.error(`You need to choose a valid valid position ! (see ${config.prefix}hint help)`);
+			if (isNaN(numb)) return logger.error(`You need to choose a valid valid number ! (see ${config.prefix}hint help)`);
 
 			client.toTry = client.toTry.filter(value => String(value)[position - 1] != numb);
-			return console.log(`Removed ${oldLength - client.toTry.length} numbers with a "${numb}" on pos ${position}.`);
+			return logger.info(`Removed ${oldLength - client.toTry.length} numbers with a "${numb}" on pos ${position}.`);
 		}
 		else {
-			return console.log(chalk.red('[ERROR] - ') + `Could not find hint type : "${type}".`);
+			return logger.error(`Could not find hint type : "${type}".`);
 		}
 	}
 });
 
 client.on('channelDelete', (channel) => {
 	if (client.watchingChannel && channel.id === client.watchingChannel.id) {
-		console.log('The GTN channel was removed !');
+		logger.warn('The GTN channel was removed !');
 		if (existsSync('./toTry.json')) unlinkSync('./toTry.json');
 		stopGuessing();
 		stopWatching();
-		console.log('Stopped the bot.');
+		logger.info('Stopped the bot.');
 	}
 });
 
@@ -307,15 +319,15 @@ const startGuessing = async () => {
 	// Added random timeout to make the bot look more 'human'.
 	const timeout = config.guessInterval + Math.random() * 1500;
 
-	if (client.toTry.length === 0) { stopGuessing(); return console.log('\nStopping the bot : All numbers have been tried !'); }
+	if (client.toTry.length === 0) { stopGuessing(); return logger.info('\nStopping the bot : All numbers have been tried !'); }
 
 	const letsTryThis = client.toTry.splice(Math.floor(Math.random() * client.toTry.length), 1);
 	client.watchingChannel.send(letsTryThis)
 		.then(() => {
 			client.attempts.bot++;
-			if (config.verbose) console.log(`Tried number ${letsTryThis}`);
+			if (config.verbose) logger.debug(`Tried number ${letsTryThis}`);
 		})
-		.catch(e => console.log(`Could not try number ${letsTryThis} : ${e}`));
+		.catch(e => logger.error(`Could not try number ${letsTryThis} : ${e}`));
 
 	// Here we go again
 	client.toTryLoop = setTimeout(startGuessing, timeout);
@@ -332,7 +344,7 @@ const tryLastMessages = (channel) => {
 		});
 
 		if (client.stopLastMessages) delete client.stopLastMessages;
-		console.log(`Scrapped and removed ${oldLength - client.toTry.length} last tried numbers from the GTN channel.`);
+		logger.info(`Scrapped and removed ${oldLength - client.toTry.length} last tried numbers from the GTN channel.`);
 	});
 };
 
@@ -361,7 +373,7 @@ const startWatching = (message) => {
 				if (!client.toTry || client.toTry.length === 0) return;
 				return saveAttempts();
 			}
-			catch (e) { console.log(`The auto-save failed : ${e}`); }
+			catch (e) { logger.error(`The auto-save failed : ${e}`); }
 		}, 60000);
 	}
 	return;
@@ -376,7 +388,7 @@ const stopWatching = () => {
 
 const saveAttempts = () => {
 	writeFileSync('./toTry.json', JSON.stringify(client.toTry));
-	return console.log(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
+	return logger.info(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
 };
 
 const checkConfig = (conf) => {
