@@ -9,6 +9,7 @@ module.exports = {
 		if (typeof conf.debugMode !== 'boolean') logger.error('The debugMode config variable is misconfigured. It should be true or false.');
 		if (typeof conf.defaultRange !== 'number' || conf.defaultRange <= 2 || conf.defaultRange > 1000000) logger.error('The defaultRange config variable is misconfigured. Make sure to that the range is an integer between 2 and 1,000,000.');
 		if (typeof conf.guessInterval !== 'number') logger.error('The guessInterval config variable is misconfigured. It should be an integer.');
+		if (typeof conf.guessIntMaxTimeout !== 'number') logger.error('The guessIntMaxTimeout config variable is misconfigured. It should be an integer.');
 		if (typeof conf.prefix !== 'string') logger.error('The prefix config variable is misconfigured. It should be a string.');
 		if (typeof conf.saveBeforeStop !== 'boolean') logger.error('The saveBeforeStop config variable is misconfigured. It should be true or false.');
 		if (typeof conf.token !== 'string') logger.error('The token config variable is misconfigured. It should be a string.');
@@ -18,13 +19,13 @@ module.exports = {
 	saveAttempts: (client, manual = false) => {
 		writeFileSync('./toTry.json', JSON.stringify(client.toTry));
 		if (manual) return logger.info(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
-		return logger.debug(`Successfully saved ${client.toTry.length} left attempts to "toTry.json"`);
+		return logger.debug(`Auto-saved ${client.toTry.length} left attempts to "toTry.json"`);
 	},
 
 	startGuessing: (client) => {
 		const loop = () => {
-			// Added random timeout to make the bot look more 'human'.
-			const timeout = client.config.guessInterval + Math.random() * 1500;
+			// Adds random timeout to make the bot look more 'human'.
+			const timeout = client.config.guessInterval + (Math.random() * client.config.guessIntMaxTimeout);
 
 			if (client.toTry.length === 0) { module.exports.stopGuessing(client); return logger.info('\nStopping the bot : All numbers have been tried !'); }
 

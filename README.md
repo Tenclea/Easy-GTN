@@ -34,6 +34,7 @@ Those are the "global variables" that are very useful to the bot.
 * `debugMode` > Whether to or not to log some informations (like attempts)
 * `defaultRange` > The default maximum number in the GTN game. (Will be used if no args are provided to the `start` command)
 * `guessInterval` > The time to wait between each guess attempt (in ms).
+* `guessIntMaxTimeout` > The maximum added time to `guessInterval` (in ms) (can be set to 0).
 * `saveBeforeStop` > Automatically save after using the the stop command if enabled (true/false).
 * `prefix` > The key used before every command.
 * `token` > The user's token to connect to.
@@ -56,5 +57,5 @@ Those are the "global variables" that are very useful to the bot.
 
 ## Disclaimer
 
-Everything you can see here has been made for educational purposes and as a proof of concept.
+Everything you can see here has been made for educational purposes and as a proof of concept.  
 I do not promote the usage of my tools, and do not take responsibility for any bad usage of this tool.
