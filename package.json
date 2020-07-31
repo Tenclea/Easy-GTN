@@ -1,16 +1,31 @@
 {
-  "name": "test",
-  "version": "1.0.0",
-  "description": "",
+  "name": "easy-gtn",
+  "version": "2.0.0",
+  "description": "An \"advanced\" Discord selfbot I made that automatically plays Guess The Number (GTN) games.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Tenclea",
+  "license": "GPL-3.0",
   "dependencies": {
     "chalk": "^4.1.0",
-    "discord.js": "^11.6.4",
+    "discord.js": "11.6.4",
     "winston": "^3.3.3"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tenclea/Easy-GTN.git"
+  },
+  "keywords": [
+    "selfbot",
+    "discord",
+    "discord.js",
+    "guess-the-number"
+  ],
+  "bugs": {
+    "url": "https://github.com/Tenclea/Easy-GTN/issues"
+  },
+  "homepage": "https://github.com/Tenclea/Easy-GTN#readme"
 }
