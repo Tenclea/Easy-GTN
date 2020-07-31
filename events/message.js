@@ -1,6 +1,7 @@
 const { saveAttempts, startGuessing, stopGuessing, startWatching, stopWatching, tryLastMessages } = require('../utils/functions');
 const { existsSync, readFileSync, unlinkSync } = require('fs');
 const logger = require('../utils/logger');
+const chalk = require('chalk');
 
 module.exports = (client) => {
 	client.on('message', (message) => {
@@ -149,19 +150,16 @@ module.exports = (client) => {
 		if (command === 'stats') {
 			const uptime = client.watchingSince ? (+new Date() - client.watchingSince) : 0;
 			const totalAtt = client.attempts ? client.attempts.bot + client.attempts.users : 0;
-			return console.log(`
-	==================================
-	Statistics for nerds :
-	----------------------
-	Guessing for : ${(uptime / 1000 / 60).toFixed(2)} minutes
-	Numbers tried : 
-	  - Bot   : ${client.attempts ? client.attempts.bot : 0}
-	  - Users : ${client.attempts ? client.attempts.users : 0}
-	  - Total : ${totalAtt} | ~${(totalAtt / (uptime / 1000)).toFixed(2)}/s
-	Numbers left : ${client.toTry ? client.toTry.length : '0'}
-	Prob. next try correct : ${client.toTry ? ((1 / client.toTry.length) * 100).toFixed(4) + '%' : '0%'}
-	==================================
-	`);
+			return console.log(`${chalk.gray('==================================')}
+${chalk.cyan('= Guessing bot =')}
+Guessing for  : ${chalk.yellow((uptime / 1000 / 60).toFixed(2))} min
+Numbers tried : 
+  ${chalk.cyanBright('- Bot   :')} ${chalk.yellow(client.attempts ? client.attempts.bot : 0)}
+  ${chalk.cyanBright('- Users :')} ${chalk.yellow(client.attempts ? client.attempts.users : 0)}
+  ${chalk.cyanBright('- Total :')} ${chalk.yellow(totalAtt)} | ~${chalk.yellow((totalAtt / (uptime / 1000)).toFixed(2))}/s
+Numbers left : ${chalk.yellow(client.toTry ? client.toTry.length : '0')}
+Prob. next try correct : ${chalk.yellow(client.toTry ? ((1 / client.toTry.length) * 100).toFixed(4) + '%' : '0%')}
+${chalk.gray('==================================')}`);
 		}
 		if (command === 'save' || command === 'backup') {
 			if (!client.toTry) return logger.error('You need to start a session before using the save command.');

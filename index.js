@@ -1,12 +1,13 @@
 process.title = 'Easy-GTN - by Tenclea';
 console.clear();
-console.log(`
+const chalk = require('chalk');
+console.log(chalk.cyan(`
  _____                 _____ _____ _____ 
 |   __|___ ___ _ _ ___|   __|_   _|   | |
 |   __| .'|_ -| | |___|  |  | | | | | | |
 |_____|__,|___|_  |   |_____| |_| |_|___|
-              |___|          - by Tenclea
-`);
+              |___|          ${chalk.gray('- by Tenclea')}
+`));
 
 // Client initialization
 const { Client } = require('discord.js');
