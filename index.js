@@ -12,6 +12,10 @@ console.log(`
 const { Client } = require('discord.js');
 const client = new Client();
 
+// Useful functions & modules
+const { readdirSync, readFileSync, watchFile } = require('fs');
+const { checkConfig } = require('./utils/functions');
+
 // Config variables & auto update on file edit
 client.config = require('./config.json');
 watchFile('./config.json', () => {
@@ -27,10 +31,6 @@ watchFile('./config.json', () => {
 
 // Initialize logger
 const logger = require('./utils/logger');
-
-// Useful functions & modules
-const { readdirSync, readFileSync, watchFile } = require('fs');
-const { checkConfig } = require('./utils/functions');
 
 // Events handler
 const events = readdirSync('./events/');
