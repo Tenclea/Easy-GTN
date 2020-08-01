@@ -33,9 +33,9 @@ watchFile('./config.json', () => {
 // Initialize logger
 const logger = require('./utils/logger');
 
-// Events handler
-const events = readdirSync('./events/');
-for (const e of events) require(`./events/${e}`)(client);
+// Handlers launch
+const handlers = readdirSync('./handlers/');
+for (const h of handlers) require(`./handlers/${h}`)(client);
 
 // Login
 client.login(client.config.token);

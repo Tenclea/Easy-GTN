@@ -6,3 +6,6 @@ node_modules
 
 # Saved attempts files
 toTry.json*
+
+# Commands template
+/commands/.sample
