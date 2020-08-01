@@ -51,6 +51,7 @@ Those are the "global variables" that are very useful to the bot.
 * [ ] Max session duration (config)
 
 * [ ] `help` command
+* [ ] `quit` / `exit` command (closes the bot)
 * [ ] ? Add a 'real' mode, where you randomly skip some messages to make it look like you're somehow "thinking" to what to choose next.
 
 ## Disclaimer
