@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 
 module.exports = {
 	name: 'start',
-	aliases: ['s'],
+	aliases: ['s', 'guess'],
 	description: 'Starts guessing numbers in the message\'s channel.',
 	usage: '[range]',
 
