@@ -29,11 +29,13 @@ module.exports = {
 
 			if (client.toTry.length === 0) { module.exports.stopGuessing(client); return logger.info('\nStopping the bot : All numbers have been tried !'); }
 
-			const letsTryThis = client.toTry.splice(Math.floor(Math.random() * client.toTry.length), 1);
+			const index = Math.floor(Math.random() * client.toTry.length);
+			const letsTryThis = client.toTry[index];
 			client.watchingChannel.send(letsTryThis)
 				.then(() => {
 					client.attempts.bot++;
 					logger.debug(`Tried number ${letsTryThis}`);
+					client.toTry.splice(index, 1);
 				})
 				.catch(e => logger.error(`Could not try number ${letsTryThis} : ${e}`));
 			// Here we go again
