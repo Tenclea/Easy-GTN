@@ -47,12 +47,9 @@ Those are the "global variables" that are very useful to the bot.
 
 ## TODO
 
-* [ ] Scrape range from pinned messages
-* [ ] Max session duration (config)
-
+* [ ] Fetch more than 100 messages at once.
 * [ ] `help` command
 * [ ] `quit` / `exit` command (closes the bot)
-* [ ] ? Add a 'real' mode, where you randomly skip some messages to make it look like you're somehow "thinking" to what to choose next.
 
 ## Disclaimer
 
