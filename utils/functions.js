@@ -83,18 +83,21 @@ module.exports = {
 		return;
 	},
 
-	tryLastMessages: (client, channel) => {
-		channel.fetchMessages({ limit: 100 }).then(messages => {
-			const oldLength = client.toTry.length;
-
-			messages.forEach(msg => {
-				const number = parseInt(msg.content);
-				if (msg.author.bot || client.stopLastMessages) { return client.stopLastMessages = true; }
-				else if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); }
+	tryLastMessages: async (client, channel) => {
+		let last = null; let compt = 0;
+		const oldLength = client.toTry.length;
+		while (!client.stopLastMessages && compt < 50) {
+			await channel.fetchMessages({ limit: 100, before: last }).then(messages => {
+				messages.forEach(msg => {
+					const number = parseInt(msg.content);
+					if (msg.author.id === client.config.botID || client.stopLastMessages) { return client.stopLastMessages = true; }
+					else if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); }
+				});
+				compt++; // Might need deeper testing (50k messages seem quite enough, but idk if Discord will allow it)
+				last = messages.lastKey();
 			});
-
-			if (client.stopLastMessages) delete client.stopLastMessages;
-			logger.info(`Scrapped and removed ${oldLength - client.toTry.length} last tried numbers from the GTN channel.`);
-		});
+		}
+		if (client.stopLastMessages) delete client.stopLastMessages;
+		logger.debug(`Scrapped and removed ${oldLength - client.toTry.length} last tried numbers from the GTN channel (${client.toTry.length} left).`);
 	},
 };
