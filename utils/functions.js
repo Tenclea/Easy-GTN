@@ -37,7 +37,7 @@ module.exports = {
 					logger.debug(`Tried number ${letsTryThis}`);
 					client.toTry.splice(index, 1);
 				})
-				.catch(e => logger.error(`Could not try number ${letsTryThis} : ${e}`));
+				.catch(e => { if (client.toTry) logger.error(`Could not try number ${letsTryThis} : ${e}`); });
 			// Here we go again
 			client.toTryLoop = setTimeout(loop, timeout);
 		};
