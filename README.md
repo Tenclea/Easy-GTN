@@ -47,7 +47,8 @@ Those are the "global variables" that are very useful to the bot.
 
 ## TODO
 
-* [ ] Fetch more than 100 messages at once.
+* [ ] Alts system
+* [ ] Players count into stats
 * [ ] `help` command
 * [ ] `quit` / `exit` command (closes the bot)
 
