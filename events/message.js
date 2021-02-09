@@ -18,8 +18,7 @@ module.exports = (client) => {
 			client.attempts.users++;
 			client.toTry.splice(client.toTry.indexOf(number), 1);
 
-			if (message.author.id === client.user.id) logger.debug(`You tried ${chalk.yellow(number)}.`);
-			else logger.debug(`${message.author.tag} tried ${chalk.yellow(number)}.`);
+			if (message.author.id !== client.user.id) logger.debug(`${message.author.tag} tried ${chalk.yellow(number)}.`);
 
 			if (client.toTry.length === 1 && client.isWatching) logger.warn(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${chalk.yellow(client.toTry[0])} !!`);
 			return;
