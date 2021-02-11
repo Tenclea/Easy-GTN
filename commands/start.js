@@ -23,14 +23,9 @@ module.exports = {
 			client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
 		}
 
-		tryLastMessages(client, message.channel);
 		startWatching(client, message);
-
-		logger.info(`Starting a new guessing session in ${client.watchingChannel.name} ! ${client.toTry.length} guesses to go !`);
-
 		startGuessing(client);
-
-		message.channel.startTyping();
+		tryLastMessages(client, message.channel);
 		return;
 	},
 };

@@ -23,10 +23,10 @@ module.exports = {
 	},
 
 	startGuessing: (client) => {
-		const loop = () => {
-			// Adds random timeout to make the bot look more 'human'.
-			const timeout = client.config.guessInterval + (Math.random() * client.config.guessIntMaxTimeout);
+		logger.info(`Starting a new guessing session in ${client.watchingChannel.name} ! ${client.toTry.length} guesses to go !`);
 
+		client.watchingChannel.startTyping();
+		const loop = () => {
 			if (client.toTry.length === 0) { module.exports.stopGuessing(client); return logger.info('\nStopping the bot : All numbers have been tried !'); }
 
 			const index = Math.floor(Math.random() * client.toTry.length);
@@ -38,7 +38,8 @@ module.exports = {
 					client.toTry.splice(index, 1);
 				})
 				.catch(e => { if (client.toTry) logger.error(`Could not try number ${letsTryThis} : ${e}`); });
-			// Here we go again
+
+			const timeout = client.config.guessInterval + (Math.random() * client.config.guessIntMaxTimeout);
 			client.toTryLoop = setTimeout(loop, timeout);
 		};
 		// Basically a 'setInterval' with variable timeout.
@@ -84,20 +85,22 @@ module.exports = {
 	},
 
 	tryLastMessages: async (client, channel) => {
-		let last = null; let compt = 0;
-		const oldLength = client.toTry.length;
-		while (!client.stopLastMessages && compt < 50) {
-			await channel.fetchMessages({ limit: 100, before: last }).then(messages => {
-				messages.forEach(msg => {
-					const number = parseInt(msg.content);
-					if (msg.author.id === client.config.botID || client.stopLastMessages) { return client.stopLastMessages = true; }
-					else if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); }
-				});
-				compt++; // Might need deeper testing (50k messages seem quite enough, but idk if Discord will allow it)
-				last = messages.lastKey();
+		let last = null; let removed = 0;
+		// while (!client.stopLastMessages && compt < 50) {
+		// Might need deeper testing (50k messages seems quite enough, but idk if Discord will allow it)
+		logger.debug('Fetching and removing old tried numbers in the gtn channel, this might take some time...');
+		for (let compt = 0; compt < 50; compt++) {
+			if (client.stopLastMessages) continue;
+			const messages = await channel.fetchMessages({ limit: 100, before: last })
+				.catch(e => logger.error(`Could not fetch last messages : ${e}.`));
+			messages.forEach(msg => {
+				if (msg.author.id === client.config.botID || client.stopLastMessages) { return client.stopLastMessages = true; }
+				const number = parseInt(msg.content);
+				if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); removed++; }
 			});
+			last = messages.lastKey();
 		}
 		if (client.stopLastMessages) delete client.stopLastMessages;
-		logger.debug(`Scrapped and removed ${oldLength - client.toTry.length} last tried numbers from the GTN channel (${client.toTry.length} left).`);
+		logger.info(`Scrapped and removed ${removed} last tried numbers from the GTN channel (${client.toTry.length} left).`);
 	},
 };
