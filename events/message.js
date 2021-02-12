@@ -11,14 +11,15 @@ module.exports = (client) => {
 
 		// Removes guesses from other users
 		if (client.toTry && message.channel.id === client.watchingChannel.id && !isNaN(parseInt(message.content))) {
-			const number = parseInt(message.content);
-			if (!client.toTry.includes(number)) return;
 
-			// Removes the number from toTry list
-			client.attempts.users++;
-			client.toTry.splice(client.toTry.indexOf(number), 1);
+			if (message.author.id !== client.user.id) {
+				const number = parseInt(message.content);
+				if (!client.toTry.includes(number)) return;
 
-			if (message.author.id !== client.user.id) logger.debug(`${message.author.tag} tried ${chalk.yellow(number)}.`);
+				client.attempts.users++;
+				client.toTry.splice(client.toTry.indexOf(number), 1);
+				logger.debug(`${message.author.tag} tried ${chalk.yellow(number)}.`);
+			}
 
 			if (client.toTry.length === 1 && client.isWatching) logger.warn(`THERE IS ONLY ONE NUMBER LEFT TO TRY >>> ${chalk.yellow(client.toTry[0])} !!`);
 			return;

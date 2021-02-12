@@ -28,15 +28,17 @@ module.exports = {
 
 		client.watchingChannel.startTyping();
 		const loop = () => {
-			if (client.toTry.length === 0) { module.exports.stopGuessing(client); return logger.info('Stopping the bot : All numbers have been tried !'); }
+			if (client.toTry.length === 0) {
+				module.exports.stopGuessing(client);
+				return logger.info('Stopping the bot : All numbers have been tried !');
+			}
 
-			const index = Math.floor(Math.random() * client.toTry.length);
-			const letsTryThis = client.toTry[index];
+			const letsTryThis = client.toTry[Math.floor(Math.random() * client.toTry.length)];
 			client.watchingChannel.send(letsTryThis)
 				.then(() => {
 					client.attempts.bot++;
+					client.toTry.splice(client.toTry.indexOf(letsTryThis), 1);
 					logger.debug(`Tried number ${letsTryThis}`);
-					client.toTry.splice(index, 1);
 				})
 				.catch(e => { if (client.toTry) logger.error(`Could not try number ${letsTryThis} : ${e}`); });
 
@@ -93,7 +95,7 @@ module.exports = {
 			const messages = await channel.fetchMessages({ limit: 100, before: last })
 				.catch(e => logger.error(`Could not fetch last messages : ${e}`));
 
-			if (messages.size == 0) return logger.debug(`Fetched and removed ${removed} messages.`);
+			if (messages.size == 0) return logger.info(`Fetched and removed ${removed} messages.`);
 			messages.forEach(msg => {
 				if (stop) { return; }
 				else if (msg.author.id === client.config.botID || !client.toTry) { return stop = true; }
