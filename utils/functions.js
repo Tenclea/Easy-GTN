@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const logger = require('../utils/logger');
 const { writeFileSync } = require('fs');
 
@@ -85,22 +86,26 @@ module.exports = {
 	},
 
 	tryLastMessages: async (client, channel) => {
-		let last = null; let removed = 0;
-		// while (!client.stopLastMessages && compt < 50) {
-		// Might need deeper testing (50k messages seems quite enough, but idk if Discord will allow it)
-		logger.debug('Fetching and removing old tried numbers in the gtn channel, this might take some time...');
-		for (let compt = 0; compt < 50; compt++) {
-			if (client.stopLastMessages) continue;
+		let removed = 0; let stop = false;
+
+		logger.debug('Fetching and removing old tried numbers in the gtn channel, this might take a minute...');
+		const fetchNumbers = async (last) => {
 			const messages = await channel.fetchMessages({ limit: 100, before: last })
-				.catch(e => logger.error(`Could not fetch last messages : ${e}.`));
+				.catch(e => logger.error(`Could not fetch last messages : ${e}`));
+
+			if (messages.size == 0) return logger.debug(`Fetched and removed ${removed} messages.`);
 			messages.forEach(msg => {
-				if (msg.author.id === client.config.botID || client.stopLastMessages) { return client.stopLastMessages = true; }
+				if (stop) { return; }
+				else if (msg.author.id === client.config.botID || !client.toTry) { return stop = true; }
+
 				const number = parseInt(msg.content);
 				if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); removed++; }
 			});
-			last = messages.lastKey();
-		}
-		if (client.stopLastMessages) delete client.stopLastMessages;
-		logger.info(`Scrapped and removed ${removed} last tried numbers from the GTN channel (${client.toTry.length} left).`);
+
+			if (removed < 50000 && !stop) fetchNumbers(messages.lastKey() ? messages.lastKey() : last);
+			else return logger.info(`Fetched and removed ${removed} previously tried numbers from the GTN channel (${chalk.yellow(client.toTry.length)} numbers left to try).`);
+		};
+
+		return fetchNumbers(null);
 	},
 };
