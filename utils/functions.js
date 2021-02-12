@@ -28,7 +28,7 @@ module.exports = {
 
 		client.watchingChannel.startTyping();
 		const loop = () => {
-			if (client.toTry.length === 0) { module.exports.stopGuessing(client); return logger.info('\nStopping the bot : All numbers have been tried !'); }
+			if (client.toTry.length === 0) { module.exports.stopGuessing(client); return logger.info('Stopping the bot : All numbers have been tried !'); }
 
 			const index = Math.floor(Math.random() * client.toTry.length);
 			const letsTryThis = client.toTry[index];
