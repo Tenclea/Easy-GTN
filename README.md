@@ -51,6 +51,8 @@ Those are the "global variables" that are very useful to the bot.
 * [ ] Players count into stats
 * [ ] `help` command
 * [ ] `quit` / `exit` command (closes the bot)
+* [ ] Handle channel cooldown
+* [ ] Good looking interface (progression slider, stats...)
 
 ## Disclaimer
 
