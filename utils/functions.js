@@ -27,14 +27,14 @@ module.exports = {
 		logger.info(`Starting a new guessing session in ${client.watchingChannel.name} ! ${client.toTry.length} guesses to go !`);
 
 		client.watchingChannel.startTyping();
-		const loop = () => {
+		const loop = async () => {
 			if (client.toTry.length === 0) {
 				module.exports.stopGuessing(client);
 				return logger.info('Stopping the bot : All numbers have been tried !');
 			}
 
 			const letsTryThis = client.toTry[Math.floor(Math.random() * client.toTry.length)];
-			client.watchingChannel.send(letsTryThis)
+			await client.watchingChannel.send(letsTryThis)
 				.then(() => {
 					client.attempts.bot++;
 					client.toTry.splice(client.toTry.indexOf(letsTryThis), 1);
@@ -92,6 +92,7 @@ module.exports = {
 
 		logger.debug('Fetching and removing old tried numbers in the gtn channel, this might take a minute...');
 		const fetchNumbers = async (last) => {
+			let temp = 0;
 			const messages = await channel.fetchMessages({ limit: 100, before: last })
 				.catch(e => logger.error(`Could not fetch last messages : ${e}`));
 
@@ -101,11 +102,13 @@ module.exports = {
 				else if (msg.author.id === client.config.botID || !client.toTry) { return stop = true; }
 
 				const number = parseInt(msg.content);
-				if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); removed++; }
+				if (!isNaN(number) && client.toTry.includes(number)) { client.toTry.splice(client.toTry.indexOf(parseInt(msg.content)), 1); temp++; }
 			});
 
-			if (removed < 50000 && !stop) fetchNumbers(messages.lastKey() ? messages.lastKey() : last);
-			else return logger.info(`Fetched and removed ${removed} previously tried numbers from the GTN channel (${chalk.yellow(client.toTry.length)} numbers left to try).`);
+			removed += temp;
+			logger.debug(chalk.cyan(`Removed ${removed - temp} more old attempts. (${removed} total)`));
+			if (removed < 50000 && !stop) setTimeout(() => { fetchNumbers(messages.lastKey() ? messages.lastKey() : last); }, 1000);
+			else return logger.info(`Fetched and removed ${removed} previously tried numbers from the GTN channel (${chalk.yellow(client.toTry ? client.toTry.length : -1)} numbers left to try).`);
 		};
 
 		return fetchNumbers(null);
