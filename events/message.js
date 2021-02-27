@@ -27,19 +27,17 @@ module.exports = (client) => {
 
 		// Check if the game's bot sends any messages
 		if (message.author.id === config.botID) {
-			// Check if a game just started
 			const embed = message.embeds[0];
-			if (embed) {
-				if (!embed.description) return;
 
-				if (embed.description.includes('Game starting in')) { return logger.info(`A GTN game is about to start in ${message.guild.name} !`); }
-				else if (embed.title && embed.title.includes('Game has STARTED')) {
+			if (embed) {
+				// if (embed.description.includes('Game starting in')) { return logger.info(`A GTN game is about to start in ${message.guild.name} !`); }
+				if (embed.title && embed.title === ':tada: Guess The Number!') {
 					// Scrape range from message's embed
-					let range = parseInt(embed.description.replace(/,/g, '').split('`').find(val => !isNaN(parseInt(val)) && parseInt(val) !== 1));
+					let range = parseInt(embed.fields[0].value.replace(/\.|\n/g, '').split(' ').find(val => !isNaN(parseInt(val)) && parseInt(val) !== 1));
 					if (!range) range = config.defaultRange;
 
 					if (!config.autoStart) { return logger.info(`A GTN game just started in ${message.guild.name} ! Range : 1 to ${range}.`); }
-					else if (client.toTry) { return logger.info(`Could not auto-start guessing in ${message.guild.name} : The bot is already watching/guessing somewhere else.`); }
+					else if (client.toTry) { return logger.warn(`Could not auto-start guessing in ${message.guild.name} : The bot is already watching/guessing somewhere else.`); }
 					else {
 						setTimeout(() => {
 							client.toTry = [...Array(range + 1).keys()]; client.toTry.shift();
@@ -56,10 +54,12 @@ module.exports = (client) => {
 					}
 				}
 				// Check if game ended
-				else if (embed.description.startsWith(':tada:')) {
-					if (embed.author.name === client.user.tag) { logger.info('Congratulations, you won the game !'); }
-					else if (message.channel.id === client.watchingChannel.id) { logger.info(`${embed.author.name} won the GTN game.. You'll have better luck next time :(`); }
-					else { logger.info(`${embed.author.name} won a game of GTN in ${message.guild.name}.`); }
+				else if (embed.description && embed.description.startsWith('The number you guessed was right!')) {
+					const winnerID = (embed.fields.find(e => e.name === 'Winner')).value.replace(/<|@|>/g, '');
+
+					if (winnerID === client.user.id) { logger.info('Congratulations, you won the game !'); }
+					else if (message.channel.id === client.watchingChannel.id) { logger.info(`${client.users.get(winnerID).tag} won the GTN game.. You'll have better luck next time :(`); }
+					else { logger.info(`${client.users.get(winnerID).tag} won a game of GTN in ${message.guild.name}.`); }
 
 					if (client.toTry && message.channel.id === client.watchingChannel.id) {
 						stopGuessing(client); stopWatching(client);
